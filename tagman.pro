@@ -15,12 +15,21 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     patternvalidator.cpp \
-    filehandler.cpp
+    filehandler.cpp \
+    authordialog.cpp \
+    resultdialog.cpp \
+    sourcefileeditdialog.cpp
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
-    filehandler.h
+    filehandler.h \
+    authordialog.h \
+    resultdialog.h \
+    sourcefileeditdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    authordialog.ui \
+    resultdialog.ui \
+    sourcefileeditdialog.ui
 
 LIBS     += -ltag

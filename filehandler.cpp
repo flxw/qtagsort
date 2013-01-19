@@ -1,7 +1,8 @@
 # include "filehandler.h"
 
+# include <QDir>
 # include <QFile>
-# include <QFileInfo>
+
 
 /* ========================================== */
 /* init placeholders */
@@ -42,7 +43,7 @@ void FileHandler::addToSources(const QString &src) {
     this->sourceFileList.append(src);
 }
 
-void FileHandler::setTargetDir(QString &t) {
+void FileHandler::setTargetDir(const QString &t) {
     this->targetDir = t;
 }
 /* =========================================== */
@@ -50,45 +51,64 @@ void FileHandler::setTargetDir(QString &t) {
 /* =========================================== */
 void FileHandler::startSortAction(void) {
     QStringList::Iterator strIt = this->sourceFileList.begin();
-    QString expandedPattern, curLoc, fileExtension;
-    const double perc = 100/this->sourceFileList.length();
+    QString expandedPattern, curLoc;
 
-    for(int i = 1; strIt != this->sourceFileList.end(); ++strIt) {
+    QFile file;
+    QFileInfo fileInfo;
+    QDir directory;
+
+    this->filesCopied  = 0;
+    this->copiesFailed = 0;
+    const float perc = 100/this->sourceFileList.length();
+
+    for(int i = 1; strIt != this->sourceFileList.end(); ++strIt, ++i) {
+        file.setFileName(*strIt);
+        fileInfo.setFile(file);
         TagLib::FileRef fr(strIt->toStdString().c_str(), false);
+
         /* check for nonexistent tags and empty files */
         if (fr.isNull()) {
-            emit fileHandled(FileHandler::FEMPTY);
+            ++this->copiesFailed;
             continue;
         } else if (fr.tag()->isEmpty()) {
-            emit fileHandled(FileHandler::FTEMPTY);
+            ++this->copiesFailed;
             continue;
         }
 
-        /* now read tags and handle data */
-        if (this->renameFiles)
-            fileExtension   = this->getFileExtension(*strIt);
+        /* expand pattern get absolute filepath or directory - depending on mode */
+        expandedPattern = (this->renameFiles) ? this->expandPattern(fr, fileInfo) : \
+                                                this->expandPattern(fr,fileInfo).append(fileInfo.fileName());
+        curLoc          = fileInfo.absoluteFilePath();
 
-        expandedPattern = this->expandPattern(fr, fileExtension);
-        curLoc          = this->isolateFilePath(*strIt);
+        if (expandedPattern != this->pattern && expandedPattern != curLoc) {
+            /* find the last directory delimiter */
+            const unsigned int pos = expandedPattern.lastIndexOf("/");
 
-        if (expandedPattern != curLoc) {
-            /* now move the file */
-            QFile file(*strIt);
-            if (file.rename(expandedPattern)) {
-                emit fileHandled(FileHandler::FGOOD);
+            /* create the directory and move the file */
+            if (directory.mkpath(expandedPattern.left(pos))) {
+                if (file.copy(expandedPattern)) {
+                    ++this->filesCopied;
+                } else {
+                    ++this->copiesFailed;
+                }
             } else {
-                emit fileHandled(FileHandler::FBAD);
+                ++this->copiesFailed;
             }
         }
-
-        emit handleProgressPerc(((int)perc)*i);
+        emit handleProgressPerc((int)(perc*i));
     }
+    emit handleProgressPerc(100);
+    FileHandler::HandleReport hrep;
+    hrep.failed  = this->copiesFailed;
+    hrep.handled = this->filesCopied;
+    emit finished(hrep);
 }
 /* =========================================== */
 /*      implementation of private functions    */
 /* =========================================== */
-QString FileHandler::expandPattern(const TagLib::FileRef &fr, const QString &ext) {
+QString FileHandler::expandPattern(const TagLib::FileRef &fr, const QFileInfo &fI) {
     QString exp = this->pattern;
+    exp.replace("/", "\n"); // workaround for slashes in tags - replace the path slashes with NULL
 
     if (!fr.tag()->artist().isEmpty())
         exp.replace(FileHandler::PH_ARTIST, fr.tag()->artist().toCString(true));
@@ -106,27 +126,11 @@ QString FileHandler::expandPattern(const TagLib::FileRef &fr, const QString &ext
         exp.replace(FileHandler::PH_YEAR, QString("%1").arg(fr.tag()->year()));
 
     if (this->renameFiles)
-        exp.replace(".ext", ext);
+        exp.replace(".ext", fI.suffix().prepend("."));
 
     /* check if part of the pattern could not be expanded */
     if (exp.contains("%"))
         return this->pattern;
-    else
-        return this->targetDir + "/" + exp;
-}
-
-QString FileHandler::isolateFilePath(const QString &path) {
-    QFileInfo fi(path);
-
-    if (this->renameFiles) {
-        return fi.absoluteFilePath();
-    } else {
-        return fi.absolutePath();
-    }
-}
-
-QString FileHandler::getFileExtension(const QString &fname) {
-    QFileInfo fi(fname);
-
-    return fi.suffix().prepend(".");
+    else /* replace tag slashes with underscore and rereplace NULLs with slashes */
+        return this->targetDir + "/" + exp.replace("/", "_").replace("\n", "/");
 }

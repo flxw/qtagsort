@@ -2,20 +2,23 @@
 #define MAINWINDOW_H
 
 # include <QMainWindow>
-#include <QDropEvent>
+# include <QDropEvent>
 
 # include "patternvalidator.h"
 # include "filehandler.h"
+# include "authordialog.h"
+# include "resultdialog.h"
+# include "sourcefileeditdialog.h"
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
-    /* functions ============================= */
+    /* methos    ============================= */
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -28,6 +31,9 @@ public:
 public slots:
     void reactOnPatternChange(QString p);
     void setDestPath(void);
+    void showAboutQt(void);
+    void editSourceFiles(void);
+    void cleanup(void);
     
 private:
     void checkAndAddFile(const QString& fpath);
@@ -35,15 +41,18 @@ private:
 
 
     /* attributes ============================ */
+public:
+    const QRegExp supportedFiletypes;
+    unsigned int entriesRead; /* counter of how many directory entries have been read */
+
 private:
-    int           entriesRead; /* counter of how many directory entries have been read */
-
-    QRegExp      supportedFiletypes;
-
     PatternValidator *patternValidator;
-    FileHandler        *fileHandler;
+    FileHandler       *fileHandler;
 
-    Ui::MainWindow *ui;
+    Ui::MainWindow        *ui;
+    AuthorDialog          *authorDialog;
+    ResultDialog          *resultDialog;
+    SourceFileEditDialog *sourceDialog;
 };
 
 #endif // MAINWINDOW_H
