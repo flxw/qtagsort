@@ -3,6 +3,7 @@
 
 # include <QObject>
 # include <QStringList>
+# include <QFileInfo>
 
 # include <taglib/fileref.h>
 # include <taglib/tag.h>
@@ -14,6 +15,11 @@ class FileHandler : public QObject
 public:
     enum HandleResult {FGOOD, FEMPTY, FTEMPTY, FBAD};
     const static QString PH_ARTIST, PH_ALBUM, PH_TITLE, PH_TRACKNO, PH_YEAR;
+
+    struct HandleReport {
+        unsigned int handled;
+        unsigned int failed;
+    };
 
 /* =========================================== */
 /*           methods are defined below         */
@@ -28,20 +34,18 @@ public:
     void addToSources(const QString &src);
     const QStringList& getSources(void) const;
 
-    void setTargetDir(QString &t);
+    void setTargetDir(const QString &t);
 
 signals:
     void fileHandled(FileHandler::HandleResult);
     void handleProgressPerc(int);
-    void finished(void); /* TODO: find data format for report */
+    void finished(FileHandler::HandleReport);
 
 public slots:
     void startSortAction(void);
 
 private:
-    QString expandPattern(const TagLib::FileRef &rg, const QString &ext);
-    QString isolateFilePath(const QString &path);
-    QString  getFileExtension(const QString& fname);
+    QString expandPattern(const TagLib::FileRef &fr, const QFileInfo &fI);
 
 /* =========================================== */
 /*        attributes are defined below         */
@@ -51,6 +55,7 @@ private:
     QString       targetDir;
     QString       pattern;
 
+    unsigned int filesCopied, copiesFailed;
     bool          renameFiles;
 };
 

@@ -1,34 +1,47 @@
 # include "mainwindow.h"
 # include "ui_mainwindow.h"
 
+# include "authordialog.h"
+
 # include <QFileDialog>
 # include <QUrl>
 # include <QDirIterator>
+# include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),  ui(new Ui::MainWindow) {
+    QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
     /* initialize the user interface object */
     ui->setupUi(this);
 
     /* set some default values =============== */
     this->patternValidator = new PatternValidator(this);
+    this->fileHandler      = new FileHandler(this);
+    this->authorDialog     = new AuthorDialog(this);
+    this->resultDialog     = new ResultDialog(this);
+    this->sourceDialog     = new SourceFileEditDialog(this);
+
     this->ui->patternEdit->setValidator(this->patternValidator);
-
-    this->fileHandler = new FileHandler(this);
-
-    this->supportedFiletypes = QRegExp(".(mp3|wma|acc|ogg)$");
-    this->entriesRead = 0;
+    this->entriesRead        = 0;
 
     /* signal handler setup ================== */
-    /* ui stuff */
+    /* ui stuff, actions */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
+    connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
+    /* beginSortButton */
     connect(this->ui->beginSortButton, SIGNAL(clicked()), this->fileHandler, SLOT(startSortAction()));
     /* patternEdit */
     connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
     /* destination selection button */
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
+    /* source edit button */
+    connect(this->ui->editSourcesButton, SIGNAL(clicked()), this, SLOT(editSourceFiles()));
     /* progress bar updates */
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
+    /* cleanup slot to prepare for next operation and data display */
+    connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
+            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
+    connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
 }
 
 MainWindow::~MainWindow() {
@@ -81,7 +94,6 @@ void MainWindow::dropEvent(QDropEvent *event) {
 
                 while ( dirIt.hasNext() ) {
                     dirIt.next();
-                    qDebug("%s", dirIt.filePath().toStdString().c_str());
 
                     ++this->entriesRead;
                     if ( dirIt.fileInfo().isFile() ) {
@@ -118,8 +130,8 @@ void MainWindow::reactOnPatternChange(QString p) {
 
 void MainWindow::setDestPath(void) {
     QString dest = QFileDialog::getExistingDirectory(this,\
-                                                     tr("Select the directory that shall contain the sorted files"),\
-                                                     QDir::homePath());
+                                                    tr("Select the directory that shall contain the sorted files"),\
+                                                    QDir::homePath());
     QFileInfo destInfo(dest);
 
     if (destInfo.isWritable()) {
@@ -127,6 +139,31 @@ void MainWindow::setDestPath(void) {
         this->ui->targetDispLabel->setText(dest);
         this->checkIfReadyForOp();
     }
+}
+
+void MainWindow::showAboutQt() {
+    QMessageBox::aboutQt(this, tr("About Qt"));
+}
+
+void MainWindow::editSourceFiles() {
+    this->sourceDialog->setStringList(this->fileHandler->getSources());
+    this->sourceDialog->show();
+
+    /* if dialog accepted, set filehandler sources */
+    //if (this->sourceDialog->)
+}
+
+void MainWindow::cleanup() {
+    this->fileHandler->setSources(QStringList());
+    this->fileHandler->setTargetDir(QString());
+    this->fileHandler->setPattern(QString());
+
+    this->entriesRead = 0;
+    this->ui->processableDispLabel->setText(QString("0"));
+    this->ui->entriesReadDispLabel->setText(QString("0"));
+    this->ui->progressBar->setValue(0);
+
+    this->checkIfReadyForOp();
 }
 
 /* =========================================== */
