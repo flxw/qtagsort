@@ -9,6 +9,7 @@
 # include "authordialog.h"
 # include "resultdialog.h"
 # include "sourcefileeditdialog.h"
+# include "musicdatamodel.h"
 
 namespace Ui {
     class MainWindow;
@@ -28,6 +29,10 @@ public:
     void dragEnterEvent(QDragEnterEvent *ev);
     void dropEvent(QDropEvent *event);
 
+    /* signals and slots ===================== */
+signals:
+    void addFilesComplete();
+
 public slots:
     void reactOnPatternChange(QString p);
     void setDestPath(void);
@@ -38,7 +43,6 @@ public slots:
 private:
     void checkAndAddFile(const QString& fpath);
     void checkIfReadyForOp(void);
-
 
     /* attributes ============================ */
 public:
@@ -53,6 +57,7 @@ private:
     AuthorDialog          *authorDialog;
     ResultDialog          *resultDialog;
     SourceFileEditDialog *sourceDialog;
+    MusicDataModel        *musicDataModel;
 };
 
 #endif // MAINWINDOW_H
