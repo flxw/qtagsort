@@ -135,8 +135,38 @@ QVariant MusicDataModel::data(const QModelIndex &index, int role) const {
     return retVariant;
 }
 
+bool MusicDataModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (role == Qt::EditRole) {
+        bool retVal = false;
+        unsigned int y;
+
+        switch(index.column()) {
+        case 0: this->db[index.row()].artist  = value.toString(); break;
+        case 1: this->db[index.row()].release = value.toString(); break;
+        case 2: this->db[index.row()].title   = value.toString(); break;
+        case 3: y = value.toInt(&retVal); if (retVal) this->db[index.row()].trackno = y; break;
+        case 4: y = value.toInt(&retVal); if (retVal) this->db[index.row()].year = y; break;
+        default: break;
+        }
+
+        if (retVal) {
+            emit dataChanged(index, index);
+            this->db[index.row()].tagsEdited = true;
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+bool MusicDataModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role) {
+    return false;
+}
+
 Qt::ItemFlags MusicDataModel::flags(const QModelIndex &index) const {
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
 /* =========================================== */
 /*       Definition  of public slots           */
