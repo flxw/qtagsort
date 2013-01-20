@@ -1,8 +1,6 @@
 # include "mainwindow.h"
 # include "ui_mainwindow.h"
 
-# include "authordialog.h"
-
 # include <QFileDialog>
 # include <QUrl>
 # include <QDirIterator>
@@ -15,13 +13,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /* set some default values =============== */
     this->patternValidator = new PatternValidator(this);
-    this->fileHandler      = new FileHandler(this);
     this->authorDialog     = new AuthorDialog(this);
     this->resultDialog     = new ResultDialog(this);
     this->sourceDialog     = new SourceFileEditDialog(this);
+    this->musicDataModel   = new MusicDataModel(this);
+    this->fileHandler      = new FileHandler(this->musicDataModel, this);
+    this->entriesRead      = 0;
 
     this->ui->patternEdit->setValidator(this->patternValidator);
-    this->entriesRead        = 0;
+    this->ui->tab2_tableView->setModel(this->musicDataModel);
+    this->ui->tab2_tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
 
     /* signal handler setup ================== */
     /* ui stuff, actions */
@@ -34,13 +35,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
     /* destination selection button */
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
-    /* source edit button */
-    connect(this->ui->editSourcesButton, SIGNAL(clicked()), this, SLOT(editSourceFiles()));
+    /* view updates */
+    //connect(this->musicDataModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this->ui->tab2_tableView, SLOT(resizeColumnsToContents()));
     /* progress bar updates */
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
     /* cleanup slot to prepare for next operation and data display */
-    connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
-            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
+    /*connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
+            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));*/
     connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
 }
 
@@ -57,11 +58,11 @@ MainWindow::~MainWindow() {
 QString MainWindow::expandExamplePattern() {
     QString pattern = this->ui->patternEdit->text();
 
-    pattern.replace(FileHandler::PH_ARTIST, "Artist");
-    pattern.replace(FileHandler::PH_ALBUM, "Album");
-    pattern.replace(FileHandler::PH_TITLE, "Track");
-    pattern.replace(FileHandler::PH_TRACKNO, "Track Number");
-    pattern.replace(FileHandler::PH_YEAR, "Year");
+    pattern.replace(MusicDataModel::PH_ARTIST, "Artist");
+    pattern.replace(MusicDataModel::PH_ALBUM, "Album");
+    pattern.replace(MusicDataModel::PH_TITLE, "Track");
+    pattern.replace(MusicDataModel::PH_TRACKNO, "Track Number");
+    pattern.replace(MusicDataModel::PH_YEAR, "Year");
 
     return pattern;
 }
@@ -103,9 +104,8 @@ void MainWindow::dropEvent(QDropEvent *event) {
             }
         }
 
-
         /* now update the counters */
-        this->ui->processableDispLabel->setText(QString("%1").arg(this->fileHandler->getSources().count()));
+        this->ui->processableDispLabel->setText(QString("%1").arg(this->musicDataModel->rowCount(QModelIndex())));
         this->ui->entriesReadDispLabel->setText(QString("%1").arg(this->entriesRead));
 
         /* check if system has enough data */
@@ -118,10 +118,10 @@ void MainWindow::dropEvent(QDropEvent *event) {
 /* =========================================== */
 void MainWindow::reactOnPatternChange(QString p) {
     if ( this->patternValidator->isValid(p) ) {
-        this->fileHandler->setPattern(p);
+        this->musicDataModel->setPattern(p);
         this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
     } else {
-        this->fileHandler->setPattern(QString());
+        this->musicDataModel->setPattern(QString());
         this->ui->parsedPatternDispLabel->setText("");
     }
 
@@ -135,7 +135,7 @@ void MainWindow::setDestPath(void) {
     QFileInfo destInfo(dest);
 
     if (destInfo.isWritable()) {
-        this->fileHandler->setTargetDir(dest);
+        this->musicDataModel->setTargetDir(dest);
         this->ui->targetDispLabel->setText(dest);
         this->checkIfReadyForOp();
     }
@@ -146,17 +146,11 @@ void MainWindow::showAboutQt() {
 }
 
 void MainWindow::editSourceFiles() {
-    this->sourceDialog->setStringList(this->fileHandler->getSources());
-    this->sourceDialog->show();
-
-    /* if dialog accepted, set filehandler sources */
-    //if (this->sourceDialog->)
+    return;
 }
 
 void MainWindow::cleanup() {
-    this->fileHandler->setSources(QStringList());
-    this->fileHandler->setTargetDir(QString());
-    this->fileHandler->setPattern(QString());
+    this->musicDataModel->clearData();
 
     this->entriesRead = 0;
     this->ui->processableDispLabel->setText(QString("0"));
@@ -173,7 +167,7 @@ void MainWindow::checkAndAddFile(const QString &fpath) {
     if (fpath.contains(this->supportedFiletypes)) {
         QFileInfo fi(fpath);
         if (fi.isReadable()) {
-            this->fileHandler->addToSources(fpath);
+            this->musicDataModel->addFile(fpath);
             return;
         } else {
             this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath));
@@ -181,19 +175,13 @@ void MainWindow::checkAndAddFile(const QString &fpath) {
     } else {
         this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath));
     }
-
-
 }
 
 void MainWindow::checkIfReadyForOp(void) {
     /* to be able to start the sorting operation. several things need to be guaranteed:
      *      - target directory set
-     *      - pattern set
+     *      - pattern is set
      *      - input files given
      */
-    if ( this->fileHandler->isReady() ) {
-        this->ui->beginSortButton->setEnabled(true);
-    } else {
-        this->ui->beginSortButton->setDisabled(true);
-    }
+    this->ui->beginSortButton->setEnabled(this->musicDataModel->isReady());
 }
