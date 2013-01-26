@@ -15,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->patternValidator = new PatternValidator(this);
     this->authorDialog     = new AuthorDialog(this);
     this->resultDialog     = new ResultDialog(this);
-    this->sourceDialog     = new SourceFileEditDialog(this);
     this->musicDataModel   = new MusicDataModel(this);
     this->fileHandler      = new FileHandler(this->musicDataModel, this);
     this->entriesRead      = 0;
@@ -25,23 +24,21 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->tab2_tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
 
     /* signal handler setup ================== */
-    /* ui stuff, actions */
+    /* UI -- basic settings tab */
+    connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
+    connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
+    /* UI -- basic settings tab */
+    //connect(this->ui->tab2_addButton, SIGNAL(clicked()), this, SLO()
+    connect(this->ui->tab2_delButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
+    /* other connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
     connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
-    /* beginSortButton */
     connect(this->ui->beginSortButton, SIGNAL(clicked()), this->fileHandler, SLOT(startSortAction()));
-    /* patternEdit */
-    connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
-    /* destination selection button */
-    connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
-    /* view updates */
-    //connect(this->musicDataModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this->ui->tab2_tableView, SLOT(resizeColumnsToContents()));
-    /* progress bar updates */
+
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
-    /* cleanup slot to prepare for next operation and data display */
-    /*connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
-            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));*/
+    connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
+            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
     connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
 }
 
@@ -49,6 +46,9 @@ MainWindow::~MainWindow() {
     delete ui;
     delete fileHandler;
     delete patternValidator;
+    delete authorDialog;
+    delete resultDialog;
+    delete musicDataModel;
 }
 
 
@@ -86,9 +86,9 @@ void MainWindow::dropEvent(QDropEvent *event) {
             tempFilename = urlList.at(i).toLocalFile();
 
             /* check wether the path leads to a file */
-            if (tempFilename.contains(".")) {
+            if (tempFilename.contains(this->supportedFiletypes)) {
                 ++this->entriesRead;
-                this->checkAndAddFile(tempFilename);
+                this->processFile(tempFilename);
             } else {
                 /* the path leads to a directory, walk it! */
                 QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
@@ -98,7 +98,7 @@ void MainWindow::dropEvent(QDropEvent *event) {
 
                     ++this->entriesRead;
                     if ( dirIt.fileInfo().isFile() ) {
-                        this->checkAndAddFile(dirIt.filePath());
+                        this->processFile(dirIt.filePath());
                     }
                 }
             }
@@ -160,10 +160,65 @@ void MainWindow::cleanup() {
     this->checkIfReadyForOp();
 }
 
+/* > on the tag tab */
+void MainWindow::addToDB() {
+    // select either files or folders with dialog and
+    // add like added with DragEvent
+    QFileDialog fd(this, tr("Select the files that you want to sort by tags"));
+    fd.setFileMode(QFileDialog::ExistingFiles | QFileDialog::Directory);
+
+    if (fd.exec() == QFileDialog::Accepted) {
+        QStringList strl = fd.selectedFiles();
+        QStringList::iterator strlIt = strl.begin();
+
+        for (; strlIt != strl.end(); ++strlIt) {
+            if (strlIt->contains(this->supportedFiletypes)) {
+                ++this->entriesRead;
+                this->processFile(*strlIt);
+            } else {
+                /* the path leads to a directory, walk it! */
+                QDirIterator dirIt(*strlIt, QDirIterator::Subdirectories);
+
+                while ( dirIt.hasNext() ) {
+                    dirIt.next();
+
+                    ++this->entriesRead;
+                    if ( dirIt.fileInfo().isFile() ) {
+                        this->processFile(dirIt.filePath());
+                    }
+                }
+            }
+        }
+    }
+}
+
+void MainWindow::deleteDBEntry() {
+    QModelIndexList sil = this->ui->tab2_tableView->selectionModel()->selectedRows();
+
+    for (unsigned int i=0; i<sil.length(); ++i) {
+        this->musicDataModel->removeRow(sil.at(i).row(), QModelIndex());
+    }
+
+    this->ui->tab2_tableView->update(QModelIndex());
+}
+
+void MainWindow::updateEntry() {
+    // update entry using MusicBrainz Database....
+    // get data from db, make call to brainz db
+    // and then display options
+    QModelIndexList sil = this->ui->tab2_tableView->selectionModel()->selectedRows();
+
+    for (int i = 0; i<sil.length(); ++i) {
+        this->musicDataModel->updateRowTags(sil.at(i).row());
+    }
+
+    this->ui->tab2_tableView->update(QModelIndex());
+}
+
 /* =========================================== */
 /*       Definition of private functions       */
 /* =========================================== */
-void MainWindow::checkAndAddFile(const QString &fpath) {
+void MainWindow::processFile(const QString &fpath) {
     if (fpath.contains(this->supportedFiletypes)) {
         QFileInfo fi(fpath);
         if (fi.isReadable()) {
@@ -178,10 +233,5 @@ void MainWindow::checkAndAddFile(const QString &fpath) {
 }
 
 void MainWindow::checkIfReadyForOp(void) {
-    /* to be able to start the sorting operation. several things need to be guaranteed:
-     *      - target directory set
-     *      - pattern is set
-     *      - input files given
-     */
     this->ui->beginSortButton->setEnabled(this->musicDataModel->isReady());
 }

@@ -21,15 +21,14 @@ MusicDataModel::MusicDataModel(QObject *parent) :
 /*       Definition  of public functions       */
 /* =========================================== */
 void MusicDataModel::addFile(const QString &file) {
+    TagLib::FileRef fr(file.toStdString().c_str(), false);
+
+    if (fr.isNull() || fr.tag()->isEmpty()) return;
 
     emit beginInsertRows(QModelIndex(), this->db.size()+1, this->db.size()+2);
 
     this->db.append(MusicFileData());
     MusicFileData& fileData = this->db.last();
-
-    TagLib::FileRef fr(file.toStdString().c_str(), false);
-
-    /* TODO: check for empty or nonexistent tags */
 
     fileData.location   = file;
     fileData.artist     = QString(fr.tag()->artist().toCString(true));
@@ -165,6 +164,11 @@ bool MusicDataModel::setHeaderData(int section, Qt::Orientation orientation, con
     return false;
 }
 
+bool MusicDataModel::removeRow(int row, const QModelIndex &parent) {
+    this->db.removeAt(row);
+    return true;
+}
+
 Qt::ItemFlags MusicDataModel::flags(const QModelIndex &index) const {
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
 }
@@ -174,7 +178,6 @@ Qt::ItemFlags MusicDataModel::flags(const QModelIndex &index) const {
 /* =========================================== */
 /*       Definition  of private functions      */
 /* =========================================== */
-
 
 void MusicDataModel::expandPattern(MusicFileData &mfd) {
     QString exp = this->pattern;

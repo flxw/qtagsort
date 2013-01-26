@@ -59,6 +59,7 @@ public:
 
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
+    bool removeRow(int row, const QModelIndex &parent);
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
     

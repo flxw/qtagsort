@@ -7,6 +7,9 @@ PatternValidator::PatternValidator(QObject *parent) :
 
 
 QValidator::State PatternValidator::validate(QString &pattern, int &pos) const {
+    if (pos == 0 || pattern.at(0) == '/')
+        return QValidator::Invalid;
+
     QValidator::State retState = QValidator::Acceptable;
 
     /* check for double slashes */
