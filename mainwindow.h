@@ -8,7 +8,6 @@
 # include "filehandler.h"
 # include "authordialog.h"
 # include "resultdialog.h"
-# include "sourcefileeditdialog.h"
 # include "musicdatamodel.h"
 
 namespace Ui {
@@ -39,25 +38,29 @@ public slots:
     void showAboutQt(void);
     void editSourceFiles(void);
     void cleanup(void);
+
+    /* on the tag tab */
+    void addToDB(void);
+    void deleteDBEntry(void);
+    void updateEntry(void);
     
 private:
-    void checkAndAddFile(const QString& fpath);
+    void processFile(const QString& fpath);
     void checkIfReadyForOp(void);
 
     /* attributes ============================ */
 public:
-    const QRegExp supportedFiletypes;
-    unsigned int entriesRead; /* counter of how many directory entries have been read */
+    const QRegExp        supportedFiletypes;
+    unsigned int         entriesRead; /* counter of how many directory entries have been read */
 
 private:
-    PatternValidator *patternValidator;
-    FileHandler       *fileHandler;
+    PatternValidator    *patternValidator;
+    FileHandler          *fileHandler;
 
-    Ui::MainWindow        *ui;
-    AuthorDialog          *authorDialog;
-    ResultDialog          *resultDialog;
-    SourceFileEditDialog *sourceDialog;
-    MusicDataModel        *musicDataModel;
+    Ui::MainWindow       *ui;
+    AuthorDialog         *authorDialog;
+    ResultDialog         *resultDialog;
+    MusicDataModel       *musicDataModel;
 };
 
 #endif // MAINWINDOW_H
