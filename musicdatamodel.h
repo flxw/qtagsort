@@ -22,6 +22,7 @@ public:
         QString location;    /* where the files comes from on the system - ABSOLUTE */
         QString destination; /* where the file will go - ABSOLUTE */
 
+        /* read tags */
         QString artist;
         QString release;
         QString title;
@@ -48,9 +49,15 @@ public:
     void setTargetDir(const QString &t);
     void clearData(void);
     void prepareData(void);
+    void updateRowTags(const int &row);
 
     bool isReady(void);
-    // required functions
+    //bool sortBySelectedCol(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs);
+
+
+    // reimplemented virtual functions
+    void sort(int column, Qt::SortOrder order);
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
 
@@ -65,6 +72,7 @@ public:
     
 private:
     void expandPattern(MusicFileData &mfd);
+
     /* Qt signals and slots ================== */
 signals:
 
