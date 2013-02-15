@@ -2,8 +2,28 @@
 
 # include <QFile>
 # include <QVariant>
+# include <QtAlgorithms>
 
 # include <taglib/fileref.h>
+
+/* helper function for sorting */
+/* TODO: make do without static variables, introduce functions like sortByArtist.... */
+static int sortCol;
+static Qt::SortOrder sortOrder;
+static bool sortBySelectedCol(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    bool blnRet;
+
+    switch (sortCol) {
+    case 0: blnRet = lhs.artist.toLower() < rhs.artist.toLower(); break;
+    case 1: blnRet = lhs.release.toLower() < rhs.artist.toLower(); break;
+    case 2: blnRet = lhs.title.toLower() < rhs.title.toLower(); break;
+    case 3: blnRet = lhs.trackno < rhs.trackno; break;
+    case 4: blnRet = lhs.year < rhs.year; break;
+    default: blnRet = false; break;
+    }
+
+    return (sortOrder == Qt::DescendingOrder)?blnRet:!blnRet;
+}
 
 /* initialize placeholders */
 const QString MusicDataModel::PH_ARTIST  = QString("%a");
@@ -80,11 +100,99 @@ void MusicDataModel::prepareData(void) {
     }
 }
 
+#include <iostream>
+#include <musicbrainz5/Query.h>
+#include <musicbrainz5/Metadata.h>
+#include <musicbrainz5/ReleaseList.h>
+#include <musicbrainz5/Release.h>
+#include <musicbrainz5/Artist.h>
+#include <musicbrainz5/HTTPFetch.h>
+#include <musicbrainz5/Disc.h>
+void MusicDataModel::updateRowTags(const int &row) {
+
+    MusicBrainz5::CQuery Query("cdlookupexample-1.0");
+    MusicBrainz5::CQuery::tParamMap pmap;
+    pmap.insert(std::pair<std::string,std::string>("query", this->db[row].artist.toStdString().c_str()));
+
+    try
+    {
+        MusicBrainz5::CMetadata Metadata=Query.Query("artist","","",pmap);
+        if (Metadata.ArtistList())
+        {
+            MusicBrainz5::CArtistList *artistList=Metadata.ArtistList();
+
+            std::cout << "Found " << artistList->NumItems() << " artist(s)" << std::endl;
+            for (int count=0;count<artistList->NumItems();count++)
+            {
+                MusicBrainz5::CArtist *art=artistList->Item(count);
+                std::cout << "\t" << art->Name() << " -- " << art->ID() << std::endl;
+
+            }
+        }
+    }
+
+    catch (MusicBrainz5::CConnectionError& Error)
+    {
+        std::cout << "Connection Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+
+    catch (MusicBrainz5::CTimeoutError& Error)
+    {
+        std::cout << "Timeout Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+
+    catch (MusicBrainz5::CAuthenticationError& Error)
+    {
+        std::cout << "Authentication Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+
+    catch (MusicBrainz5::CFetchError& Error)
+    {
+        std::cout << "Fetch Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+
+    catch (MusicBrainz5::CRequestError& Error)
+    {
+        std::cout << "Request Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+
+    catch (MusicBrainz5::CResourceNotFoundError& Error)
+    {
+        std::cout << "ResourceNotFound Exception: '" << Error.what() << "'" << std::endl;
+        std::cout << "LastResult: " << Query.LastResult() << std::endl;
+        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
+        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
+    }
+}
+
 bool MusicDataModel::isReady(void) {
     return !this->db.isEmpty() && !this->pattern.isEmpty() && !this->targetDirectory.isEmpty();
 }
 
 // required functions ---------------------------
+void MusicDataModel::sort(int column, Qt::SortOrder order) {
+    sortCol   = column;
+    sortOrder = order;
+
+    qSort(db.begin(), db.end(), sortBySelectedCol);
+    emit dataChanged(QModelIndex(),QModelIndex());
+}
+
 int MusicDataModel::rowCount(const QModelIndex &parent) const {
     return this->db.size();
 }
@@ -178,7 +286,6 @@ Qt::ItemFlags MusicDataModel::flags(const QModelIndex &index) const {
 /* =========================================== */
 /*       Definition  of private functions      */
 /* =========================================== */
-
 void MusicDataModel::expandPattern(MusicFileData &mfd) {
     QString exp = this->pattern;
 
