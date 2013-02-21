@@ -20,16 +20,17 @@ MainWindow::MainWindow(QWidget *parent) :
     this->entriesRead      = 0;
 
     this->ui->patternEdit->setValidator(this->patternValidator);
-    this->ui->tab2_tableView->setModel(this->musicDataModel);
-    this->ui->tab2_tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->setModel(this->musicDataModel);
+    this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
 
     /* signal handler setup ================== */
     /* UI -- basic settings tab */
     connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
     /* UI -- basic settings tab */
-    //connect(this->ui->tab2_addButton, SIGNAL(clicked()), this, SLO()
-    connect(this->ui->tab2_delButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
+    connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
+    connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
+    connect(this->ui->updateEntryButton, SIGNAL(clicked()), this, SLOT(updateEntry()));
     /* other connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
@@ -165,9 +166,10 @@ void MainWindow::addToDB() {
     // select either files or folders with dialog and
     // add like added with DragEvent
     QFileDialog fd(this, tr("Select the files that you want to sort by tags"));
-    fd.setFileMode(QFileDialog::ExistingFiles | QFileDialog::Directory);
+    fd.setFileMode(QFileDialog::ExistingFiles);
 
     if (fd.exec() == QFileDialog::Accepted) {
+        /* TODO: rewrite with QDirIterator... */
         QStringList strl = fd.selectedFiles();
         QStringList::iterator strlIt = strl.begin();
 
@@ -193,26 +195,27 @@ void MainWindow::addToDB() {
 }
 
 void MainWindow::deleteDBEntry() {
-    QModelIndexList sil = this->ui->tab2_tableView->selectionModel()->selectedRows();
+    QModelIndexList sil = this->ui->tableView->selectionModel()->selectedRows();
 
     for (unsigned int i=0; i<sil.length(); ++i) {
         this->musicDataModel->removeRow(sil.at(i).row(), QModelIndex());
     }
 
-    this->ui->tab2_tableView->update(QModelIndex());
+    this->ui->tableView->setUpdatesEnabled(true);
+    this->ui->tableView->update(QModelIndex());
 }
 
 void MainWindow::updateEntry() {
     // update entry using MusicBrainz Database....
     // get data from db, make call to brainz db
     // and then display options
-    QModelIndexList sil = this->ui->tab2_tableView->selectionModel()->selectedRows();
+    QModelIndexList sil = this->ui->tableView->selectionModel()->selectedRows();
 
     for (int i = 0; i<sil.length(); ++i) {
         this->musicDataModel->updateRowTags(sil.at(i).row());
     }
 
-    this->ui->tab2_tableView->update(QModelIndex());
+    this->ui->tableView->update(QModelIndex());
 }
 
 /* =========================================== */
