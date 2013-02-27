@@ -9,6 +9,8 @@
 # include "authordialog.h"
 # include "resultdialog.h"
 # include "musicdatamodel.h"
+# include "musictableeditdelegate.h"
+# include "brainzlineedit.h"
 
 namespace Ui {
     class MainWindow;
@@ -42,7 +44,6 @@ public slots:
     /* on the tag tab */
     void addToDB(void);
     void deleteDBEntry(void);
-    void updateEntry(void);
     
 private:
     void processFile(const QString& fpath);
@@ -57,10 +58,12 @@ private:
     PatternValidator    *patternValidator;
     FileHandler          *fileHandler;
 
-    Ui::MainWindow       *ui;
-    AuthorDialog         *authorDialog;
-    ResultDialog         *resultDialog;
-    MusicDataModel       *musicDataModel;
+    Ui::MainWindow          *ui;
+    AuthorDialog            *authorDialog;
+    ResultDialog            *resultDialog;
+    MusicDataModel          *musicDataModel;
+    MusicTableEditDelegate *musicEditDelegate;
+    BrainzLineEdit          *brainzLineEdit;
 };
 
 #endif // MAINWINDOW_H

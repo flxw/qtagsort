@@ -6,23 +6,36 @@
 
 # include <taglib/fileref.h>
 
-/* helper function for sorting */
-/* TODO: make do without static variables, introduce functions like sortByArtist.... */
-static int sortCol;
-static Qt::SortOrder sortOrder;
-static bool sortBySelectedCol(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
-    bool blnRet;
-
-    switch (sortCol) {
-    case 0: blnRet = lhs.artist.toLower() < rhs.artist.toLower(); break;
-    case 1: blnRet = lhs.release.toLower() < rhs.artist.toLower(); break;
-    case 2: blnRet = lhs.title.toLower() < rhs.title.toLower(); break;
-    case 3: blnRet = lhs.trackno < rhs.trackno; break;
-    case 4: blnRet = lhs.year < rhs.year; break;
-    default: blnRet = false; break;
-    }
-
-    return (sortOrder == Qt::DescendingOrder)?blnRet:!blnRet;
+/* helper functions for sorting */
+static bool sortByArtist(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.artist.toLower() < rhs.artist.toLower();
+}
+static bool sortByRelease(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.release.toLower() < rhs.artist.toLower();
+}
+static bool sortByTitle(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.title.toLower() < rhs.title.toLower();
+}
+static bool sortByTrackno(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.trackno < rhs.trackno;
+}
+static bool sortByYear(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.year < rhs.year;
+}
+static bool sortRevByArtist(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.artist.toLower() > rhs.artist.toLower();
+}
+static bool sortRevByRelease(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.release.toLower() > rhs.artist.toLower();
+}
+static bool sortRevByTitle(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.title.toLower() > rhs.title.toLower();
+}
+static bool sortRevByTrackno(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.trackno > rhs.trackno;
+}
+static bool sortRevByYear(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs) {
+    return lhs.year > rhs.year;
 }
 
 /* initialize placeholders */
@@ -100,96 +113,27 @@ void MusicDataModel::prepareData(void) {
     }
 }
 
-#include <iostream>
-#include <musicbrainz5/Query.h>
-#include <musicbrainz5/Metadata.h>
-#include <musicbrainz5/ReleaseList.h>
-#include <musicbrainz5/Release.h>
-#include <musicbrainz5/Artist.h>
-#include <musicbrainz5/HTTPFetch.h>
-#include <musicbrainz5/Disc.h>
-void MusicDataModel::updateRowTags(const int &row) {
-
-    MusicBrainz5::CQuery Query("cdlookupexample-1.0");
-    MusicBrainz5::CQuery::tParamMap pmap;
-    pmap.insert(std::pair<std::string,std::string>("query", this->db[row].artist.toStdString().c_str()));
-
-    try
-    {
-        MusicBrainz5::CMetadata Metadata=Query.Query("artist","","",pmap);
-        if (Metadata.ArtistList())
-        {
-            MusicBrainz5::CArtistList *artistList=Metadata.ArtistList();
-
-            std::cout << "Found " << artistList->NumItems() << " artist(s)" << std::endl;
-            for (int count=0;count<artistList->NumItems();count++)
-            {
-                MusicBrainz5::CArtist *art=artistList->Item(count);
-                std::cout << "\t" << art->Name() << " -- " << art->ID() << std::endl;
-
-            }
-        }
-    }
-
-    catch (MusicBrainz5::CConnectionError& Error)
-    {
-        std::cout << "Connection Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-
-    catch (MusicBrainz5::CTimeoutError& Error)
-    {
-        std::cout << "Timeout Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-
-    catch (MusicBrainz5::CAuthenticationError& Error)
-    {
-        std::cout << "Authentication Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-
-    catch (MusicBrainz5::CFetchError& Error)
-    {
-        std::cout << "Fetch Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-
-    catch (MusicBrainz5::CRequestError& Error)
-    {
-        std::cout << "Request Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-
-    catch (MusicBrainz5::CResourceNotFoundError& Error)
-    {
-        std::cout << "ResourceNotFound Exception: '" << Error.what() << "'" << std::endl;
-        std::cout << "LastResult: " << Query.LastResult() << std::endl;
-        std::cout << "LastHTTPCode: " << Query.LastHTTPCode() << std::endl;
-        std::cout << "LastErrorMessage: " << Query.LastErrorMessage() << std::endl;
-    }
-}
-
 bool MusicDataModel::isReady(void) {
     return !this->db.isEmpty() && !this->pattern.isEmpty() && !this->targetDirectory.isEmpty();
 }
 
-// required functions ---------------------------
+// reimplemented virtual functions ---------------
 void MusicDataModel::sort(int column, Qt::SortOrder order) {
-    sortCol   = column;
-    sortOrder = order;
+    bool (*sortFunc)(const MusicDataModel::MusicFileData&, const MusicDataModel::MusicFileData&);
+    bool reverse = (order == Qt::DescendingOrder);
 
-    qSort(db.begin(), db.end(), sortBySelectedCol);
+    switch (column) {
+        case 0: sortFunc = (reverse)?sortRevByArtist:sortByArtist; break;
+        case 1: sortFunc = (reverse)?sortRevByRelease:sortByRelease; break;
+        case 2: sortFunc = (reverse)?sortRevByTitle:sortByTitle; break;
+        case 3: sortFunc = (reverse)?sortRevByTrackno:sortByTrackno; break;
+        case 4: sortFunc = (reverse)?sortRevByYear:sortByYear; break;
+        default: sortFunc = NULL; break;
+    }
+
+    if (!sortFunc) return;
+
+    qSort(db.begin(), db.end(), sortFunc);
     emit dataChanged(QModelIndex(),QModelIndex());
 }
 
@@ -223,10 +167,10 @@ QVariant MusicDataModel::headerData(int section, Qt::Orientation orientation, in
 }
 
 QVariant MusicDataModel::data(const QModelIndex &index, int role) const {
-    if (role != Qt::DisplayRole) {
+    /* leave out check for role here - we deliver the same content for every role */
+    if (role != Qt::DisplayRole && role != Qt::EditRole) {
         return QVariant();
     }
-
 
     QVariant retVariant(QVariant::String);
 

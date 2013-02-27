@@ -40,8 +40,7 @@ public:
 
     /* adds a file to the database assuming that permissions and filetype are ok */
     void addFile(const QString &file);
-    // void removeFile....
-    // void editFile...
+
     QList<MusicDataModel::MusicFileData>::const_iterator getDBstart(void) const;
     QList<MusicDataModel::MusicFileData>::const_iterator getDBend(void) const;
 
@@ -49,11 +48,8 @@ public:
     void setTargetDir(const QString &t);
     void clearData(void);
     void prepareData(void);
-    void updateRowTags(const int &row);
 
     bool isReady(void);
-    //bool sortBySelectedCol(const MusicDataModel::MusicFileData &lhs, const MusicDataModel::MusicFileData &rhs);
-
 
     // reimplemented virtual functions
     void sort(int column, Qt::SortOrder order);

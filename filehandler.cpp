@@ -21,7 +21,7 @@ void FileHandler::startSortAction(void) {
 
     this->filesCopied  = 0;
     this->copiesFailed = 0;
-    const float perc = 100/this->dm->rowCount(QModelIndex());
+    const float perc  = 100/this->dm->rowCount(QModelIndex());
 
     /* everything is initalized, now let the pattern expansion begin */
     this->dm->prepareData();
@@ -51,6 +51,7 @@ void FileHandler::startSortAction(void) {
     hrep.handled = this->filesCopied;
     emit finished(hrep);
 }
+
 /* =========================================== */
 /*      implementation of private functions    */
 /* =========================================== */

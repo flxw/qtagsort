@@ -18,18 +18,23 @@ SOURCES += main.cpp\
     filehandler.cpp \
     authordialog.cpp \
     resultdialog.cpp \
-    sourcefileeditdialog.cpp
+    musicdatamodel.cpp \
+    musictableeditdelegate.cpp \
+    brainzlineedit.cpp
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
     filehandler.h \
     authordialog.h \
     resultdialog.h \
-    sourcefileeditdialog.h
+    musicdatamodel.h \
+    musictableeditdelegate.h \
+    brainzlineedit.h \
+    versioninfo.h
 
 FORMS    += mainwindow.ui \
     authordialog.ui \
-    resultdialog.ui \
-    sourcefileeditdialog.ui
+    resultdialog.ui
 
-LIBS     += -ltag
+INCLUDEPATH += -I/usr/include/neon
+LIBS     += -ltag -lmusicbrainz5
