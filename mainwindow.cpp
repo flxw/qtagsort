@@ -30,22 +30,22 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowTitle(QString(PROGNAME));
 
     /* signal handler setup ================== */
-    /* UI -- basic settings tab */
+    /* UI -- button functionality for program operation parameters */
     connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
-    /* UI -- basic settings tab */
+    /* UI -- button functionality for tableview */
     connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
-    //connect(this->ui->updateEntryButton, SIGNAL(clicked()), this, SLOT(updateEntry()));
-    /* other connections */
+    /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
     connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
     connect(this->ui->beginSortButton, SIGNAL(clicked()), this->fileHandler, SLOT(startSortAction()));
+    /* UI -- error handling */
+    connect(this->musicEditDelegate, SIGNAL(relayedBrainzNotification(QString)), this->ui->statusBar, SLOT(showMessage(QString)));
 
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
-    connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), \
-            this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
+    connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
     connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
 }
 
