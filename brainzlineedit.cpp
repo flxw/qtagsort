@@ -48,9 +48,11 @@ void BrainzLineEdit::prepareCompleterData(void) {
     MusicBrainz5::CQuery Query(PROGNAME "-" VERSION);
     MusicBrainz5::CQuery::tParamMap pmap;
 
-    /* TODO: write function that generates the pmap
-     *       write functions that parse the data for the different query types
-     *       write function to give the data to the completer */
+    /* do not try to complete if:
+     * + no artist is set
+     * + artist column selected
+     */
+
     pmap = this->generateParameterMap();
 
     try {
@@ -126,42 +128,67 @@ std::map<std::string, std::string> BrainzLineEdit::generateParameterMap(void) {
     /* artist field */
     case 0:
         this->queryType = QString("artist");
-        queryBuffer = this->queryType;
+        queryBuffer = QString("artist:");
         queryBuffer.append(this->text());
         break;
 
     /* release field */
     case 1:
         this->queryType = QString("release");
-        queryBuffer = QString("artist:");
-        queryBuffer.append(this->artist);
-        queryBuffer.append("&release");
-        queryBuffer.append(this->text());
+
+        if (this->artist.length()) {
+            queryBuffer = QString("artist:");
+            queryBuffer.append(this->artist);
+        }
+
+        if (this->text().length()) {
+            queryBuffer.append((queryBuffer.length())?"&":"");
+            queryBuffer.append("release:");
+            queryBuffer.append(this->text());
+        }
         break;
 
     /* title field */
     case 2:
         this->queryType = QString("title");
-        queryBuffer = QString("artist:");
-        queryBuffer.append(this->artist);
-        queryBuffer.append("&release:");
-        queryBuffer.append(this->release);
-        queryBuffer.append("&title:");
-        queryBuffer.append(this->text());
+
+        if (this->artist.length()) {
+            queryBuffer = QString("artist:");
+            queryBuffer.append(this->artist);
+        }
+
+        if (this->release.length()) {
+            queryBuffer.append((queryBuffer.length())?"&":"");
+            queryBuffer.append("release:");
+            queryBuffer.append(this->release);
+        }
+
+        if (this->text().length() > 0) {
+            queryBuffer.append((queryBuffer.length())?"&":"");
+            queryBuffer.append("title:");
+            queryBuffer.append(this->text());
+        }
         break;
     }
 
     /* now insert the buffers into the pmap */
-    pmap.insert(std::pair<std::string,std::string>(std::string("query"), queryBuffer.toStdString()));
-    pmap.insert(std::pair<std::string, std::string>(std::string("limit"), std::string("25")));
+    pmap.insert(std::pair<std::string,std::string>(std::string("query"), queryBuffer.replace(QString(" "),QString("+")).toStdString()));
+    pmap.insert(std::pair<std::string, std::string>(std::string("limit"), std::string("10")));
+
+    qDebug("query string: %s", queryBuffer.toLocal8Bit().data());
 
     return pmap;
 }
 
 void BrainzLineEdit::loadArtistList(const MusicBrainz5::CArtistList *alist) {
     MusicBrainz5::CArtist *art;
-
     int max = alist->NumItems()-1;
+
+    if (max == -1) {
+        emit brainzNotification(tr("No suggestions available from MusicBrainz!"));
+        return;
+    }
+
     for (int i = 0; i <= max; ++i) {
         art = alist->Item(i);
         this->suggestionList.append(QString::fromStdString(art->Name()));
@@ -170,8 +197,13 @@ void BrainzLineEdit::loadArtistList(const MusicBrainz5::CArtistList *alist) {
 
 void BrainzLineEdit::loadReleaseList(const MusicBrainz5::CReleaseList *rlist) {
     MusicBrainz5::CRelease* rel;
-
     int max = rlist->NumItems()-1;
+
+    if (max == -1) {
+        emit brainzNotification(tr("No suggestions available from MusicBrainz!"));
+        return;
+    }
+
     for (int i = 0; i<=max; ++i) {
         rel = rlist->Item(i);
         this->suggestionList.append(QString::fromStdString(rel->Title()));

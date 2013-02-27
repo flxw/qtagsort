@@ -23,6 +23,7 @@ public:
     void setAdditionalInfo(const QString &a, const QString &r);
     
 signals:
+    void brainzNotification(QString);
     
 public slots:
     void prepareCompleterData(void);
