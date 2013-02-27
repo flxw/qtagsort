@@ -1,5 +1,6 @@
 # include "mainwindow.h"
 # include "ui_mainwindow.h"
+# include "versioninfo.h"
 
 # include <QFileDialog>
 # include <QUrl>
@@ -17,11 +18,16 @@ MainWindow::MainWindow(QWidget *parent) :
     this->resultDialog     = new ResultDialog(this);
     this->musicDataModel   = new MusicDataModel(this);
     this->fileHandler      = new FileHandler(this->musicDataModel, this);
+    this->musicEditDelegate= new MusicTableEditDelegate(musicDataModel, this);
     this->entriesRead      = 0;
 
     this->ui->patternEdit->setValidator(this->patternValidator);
+
     this->ui->tableView->setModel(this->musicDataModel);
     this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->setItemDelegate(musicEditDelegate);
+
+    this->setWindowTitle(QString(PROGNAME));
 
     /* signal handler setup ================== */
     /* UI -- basic settings tab */
@@ -30,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     /* UI -- basic settings tab */
     connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
-    connect(this->ui->updateEntryButton, SIGNAL(clicked()), this, SLOT(updateEntry()));
+    //connect(this->ui->updateEntryButton, SIGNAL(clicked()), this, SLOT(updateEntry()));
     /* other connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
@@ -197,24 +203,11 @@ void MainWindow::addToDB() {
 void MainWindow::deleteDBEntry() {
     QModelIndexList sil = this->ui->tableView->selectionModel()->selectedRows();
 
-    for (unsigned int i=0; i<sil.length(); ++i) {
+    for (int i=0; i<sil.length(); ++i) {
         this->musicDataModel->removeRow(sil.at(i).row(), QModelIndex());
     }
 
     this->ui->tableView->setUpdatesEnabled(true);
-    this->ui->tableView->update(QModelIndex());
-}
-
-void MainWindow::updateEntry() {
-    // update entry using MusicBrainz Database....
-    // get data from db, make call to brainz db
-    // and then display options
-    QModelIndexList sil = this->ui->tableView->selectionModel()->selectedRows();
-
-    for (int i = 0; i<sil.length(); ++i) {
-        this->musicDataModel->updateRowTags(sil.at(i).row());
-    }
-
     this->ui->tableView->update(QModelIndex());
 }
 
