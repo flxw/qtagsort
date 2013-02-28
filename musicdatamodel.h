@@ -4,14 +4,6 @@
 # include <QAbstractTableModel>
 # include <QList>
 
-/* class abstract
- *  this class shall
-     - receive drag and drop inputs
-     - read file tags and add them to the index
-     - allow tag edits
-     - shall provide a basis for plugging in future MusicBrainz support
-*/
-
 class MusicDataModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -39,17 +31,20 @@ public:
     explicit MusicDataModel(QObject *parent = 0);
 
     /* adds a file to the database assuming that permissions and filetype are ok */
-    void addFile(const QString &file);
 
     QList<MusicDataModel::MusicFileData>::const_iterator getDBstart(void) const;
     QList<MusicDataModel::MusicFileData>::const_iterator getDBend(void) const;
+
+    QString getFileLocation(const QModelIndex &mdi) const;
+
+    int addFile(const QString &file);
+
+    bool isReady(void);
 
     void setPattern(const QString &p);
     void setTargetDir(const QString &t);
     void clearData(void);
     void prepareData(void);
-
-    bool isReady(void);
 
     // reimplemented virtual functions
     void sort(int column, Qt::SortOrder order);

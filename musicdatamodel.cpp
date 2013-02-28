@@ -53,12 +53,26 @@ MusicDataModel::MusicDataModel(QObject *parent) :
 /* =========================================== */
 /*       Definition  of public functions       */
 /* =========================================== */
-void MusicDataModel::addFile(const QString &file) {
+
+
+QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBstart(void) const {
+    return this->db.begin();
+}
+
+QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBend(void) const {
+    return this->db.end();
+}
+
+QString MusicDataModel::getFileLocation(const QModelIndex &mdi) const {
+    return this->db.at(mdi.row()).location;
+}
+
+int MusicDataModel::addFile(const QString &file) {
     TagLib::FileRef fr(file.toStdString().c_str(), false);
 
-    if (fr.isNull() || fr.tag()->isEmpty()) return;
+    if (fr.isNull() || fr.tag()->isEmpty()) return 0;
 
-    emit beginInsertRows(QModelIndex(), this->db.size()+1, this->db.size()+2);
+    emit beginInsertRows(QModelIndex(), this->db.size()+1, this->db.size()+1);
 
     this->db.append(MusicFileData());
     MusicFileData& fileData = this->db.last();
@@ -73,15 +87,15 @@ void MusicDataModel::addFile(const QString &file) {
     fileData.isGood     = false;
 
     emit endInsertRows();
+    qDebug("db size: %i", this->db.size());
+
+    return 0;
 }
 
-QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBstart(void) const {
-    return this->db.begin();
+bool MusicDataModel::isReady(void) {
+    return !this->db.isEmpty() && !this->pattern.isEmpty() && !this->targetDirectory.isEmpty();
 }
 
-QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBend(void) const {
-    return this->db.end();
-}
 
 void MusicDataModel::setPattern(const QString &p) {
     this->pattern     = p;
@@ -100,8 +114,7 @@ void MusicDataModel::clearData(void) {
 
 void MusicDataModel::prepareData(void) {
     /* prepares the data for the sort operation
-     * by setting the location member of all MusicFileInfo elements in this->db
-     */
+     * by setting the location member of all MusicFileInfo elements in this->db  */
     QList<MusicDataModel::MusicFileData>::iterator dbIt = this->db.begin();
 
     for (; dbIt != this->db.end(); ++dbIt) {
@@ -113,9 +126,6 @@ void MusicDataModel::prepareData(void) {
     }
 }
 
-bool MusicDataModel::isReady(void) {
-    return !this->db.isEmpty() && !this->pattern.isEmpty() && !this->targetDirectory.isEmpty();
-}
 
 // reimplemented virtual functions ---------------
 void MusicDataModel::sort(int column, Qt::SortOrder order) {

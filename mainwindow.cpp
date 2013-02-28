@@ -18,14 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->resultDialog     = new ResultDialog(this);
     this->musicDataModel   = new MusicDataModel(this);
     this->fileHandler      = new FileHandler(this->musicDataModel, this);
-    this->musicEditDelegate= new MusicTableEditDelegate(musicDataModel, this);
-    this->entriesRead      = 0;
 
     this->ui->patternEdit->setValidator(this->patternValidator);
 
     this->ui->tableView->setModel(this->musicDataModel);
     this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
-    this->ui->tableView->setItemDelegate(musicEditDelegate);
 
     this->setWindowTitle(QString(PROGNAME));
 
@@ -33,17 +30,17 @@ MainWindow::MainWindow(QWidget *parent) :
     /* UI -- button functionality for program operation parameters */
     connect(this->ui->patternEdit, SIGNAL(textChanged(QString)), this, SLOT(reactOnPatternChange(QString)));
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
-    /* UI -- button functionality for tableview */
+    /* UI -- functionality for tableview */
     connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
+    connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
     /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
     connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
     connect(this->ui->beginSortButton, SIGNAL(clicked()), this->fileHandler, SLOT(startSortAction()));
-    /* UI -- error handling */
-    connect(this->musicEditDelegate, SIGNAL(relayedBrainzNotification(QString)), this->ui->statusBar, SLOT(showMessage(QString)));
 
+    /* operation aftermath information display */
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
     connect(this->fileHandler, SIGNAL(finished(FileHandler::HandleReport)), this->resultDialog, SLOT(prepareShow(FileHandler::HandleReport)));
     connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
@@ -65,11 +62,11 @@ MainWindow::~MainWindow() {
 QString MainWindow::expandExamplePattern() {
     QString pattern = this->ui->patternEdit->text();
 
-    pattern.replace(MusicDataModel::PH_ARTIST, "Artist");
-    pattern.replace(MusicDataModel::PH_ALBUM, "Album");
-    pattern.replace(MusicDataModel::PH_TITLE, "Track");
+    pattern.replace(MusicDataModel::PH_ARTIST,  "Artist");
+    pattern.replace(MusicDataModel::PH_ALBUM,   "Album");
+    pattern.replace(MusicDataModel::PH_TITLE,   "Track");
     pattern.replace(MusicDataModel::PH_TRACKNO, "Track Number");
-    pattern.replace(MusicDataModel::PH_YEAR, "Year");
+    pattern.replace(MusicDataModel::PH_YEAR,    "Year");
 
     return pattern;
 }
@@ -82,6 +79,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *ev) {
 void MainWindow::dropEvent(QDropEvent *event) {
     const QMimeData *mD = event->mimeData();
 
+    unsigned int read      = 0;
+    unsigned int processed = 0;
+
     /* check if we can get the location of the files dragged into the window */
     if (mD->hasUrls()) {
         QList<QUrl> urlList = mD->urls();
@@ -91,32 +91,29 @@ void MainWindow::dropEvent(QDropEvent *event) {
         /* check if local file or folder */
         for (int i=0; i < urlList.size(); ++i) {
             tempFilename = urlList.at(i).toLocalFile();
+            QFileInfo fi(tempFilename);
 
             /* check wether the path leads to a file */
-            if (tempFilename.contains(this->supportedFiletypes)) {
-                ++this->entriesRead;
-                this->processFile(tempFilename);
-            } else {
+            if (fi.isFile() && tempFilename.contains(this->supportedFiletypes)) {
+                ++read;
+                this->processFile(tempFilename, processed);
+            } else if (fi.isDir()){
                 /* the path leads to a directory, walk it! */
                 QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
 
-                while ( dirIt.hasNext() ) {
+                while (dirIt.hasNext()) {
                     dirIt.next();
 
-                    ++this->entriesRead;
+                    ++read;
                     if ( dirIt.fileInfo().isFile() ) {
-                        this->processFile(dirIt.filePath());
+                        this->processFile(dirIt.filePath(), processed);
                     }
                 }
             }
         }
-
-        /* now update the counters */
-        this->ui->processableDispLabel->setText(QString("%1").arg(this->musicDataModel->rowCount(QModelIndex())));
-        this->ui->entriesReadDispLabel->setText(QString("%1").arg(this->entriesRead));
-
-        /* check if system has enough data */
+        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
         this->checkIfReadyForOp();
+
     }
 }
 
@@ -145,6 +142,8 @@ void MainWindow::setDestPath(void) {
         this->musicDataModel->setTargetDir(dest);
         this->ui->targetDispLabel->setText(dest);
         this->checkIfReadyForOp();
+    } else {
+        this->ui->statusBar->showMessage(tr("Error: destination directory not writable!"), 5000);
     }
 }
 
@@ -152,16 +151,17 @@ void MainWindow::showAboutQt() {
     QMessageBox::aboutQt(this, tr("About Qt"));
 }
 
-void MainWindow::editSourceFiles() {
-    return;
+void MainWindow::showFileLocation(const QModelIndex &mdi) {
+    if (this->ui->tableView->selectionModel()->selectedRows().size() == 1) {
+        this->ui->fileLocLabel->setText(this->musicDataModel->getFileLocation(mdi));
+    } else {
+        this->ui->fileLocLabel->setText(QString());
+    }
 }
 
 void MainWindow::cleanup() {
     this->musicDataModel->clearData();
 
-    this->entriesRead = 0;
-    this->ui->processableDispLabel->setText(QString("0"));
-    this->ui->entriesReadDispLabel->setText(QString("0"));
     this->ui->progressBar->setValue(0);
 
     this->checkIfReadyForOp();
@@ -179,24 +179,32 @@ void MainWindow::addToDB() {
         QStringList strl = fd.selectedFiles();
         QStringList::iterator strlIt = strl.begin();
 
+        unsigned int read      = 0;
+        unsigned int processed = 0;
+
         for (; strlIt != strl.end(); ++strlIt) {
-            if (strlIt->contains(this->supportedFiletypes)) {
-                ++this->entriesRead;
-                this->processFile(*strlIt);
-            } else {
+            QFileInfo fi(*strlIt);
+
+            /* check wether the path leads to a file */
+            if (fi.isFile() && strlIt->contains(this->supportedFiletypes)) {
+                ++read;
+                this->processFile(*strlIt, processed);
+            } else if (fi.isDir()){
                 /* the path leads to a directory, walk it! */
                 QDirIterator dirIt(*strlIt, QDirIterator::Subdirectories);
 
-                while ( dirIt.hasNext() ) {
+                while (dirIt.hasNext()) {
                     dirIt.next();
 
-                    ++this->entriesRead;
-                    if ( dirIt.fileInfo().isFile() ) {
-                        this->processFile(dirIt.filePath());
+                    ++read;
+                    if (dirIt.fileInfo().isFile()) {
+                        this->processFile(dirIt.filePath(), processed);
                     }
                 }
             }
         }
+        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
+        this->checkIfReadyForOp();
     }
 }
 
@@ -214,11 +222,11 @@ void MainWindow::deleteDBEntry() {
 /* =========================================== */
 /*       Definition of private functions       */
 /* =========================================== */
-void MainWindow::processFile(const QString &fpath) {
+void MainWindow::processFile(const QString &fpath, unsigned int &proc) {
     if (fpath.contains(this->supportedFiletypes)) {
         QFileInfo fi(fpath);
         if (fi.isReadable()) {
-            this->musicDataModel->addFile(fpath);
+            proc += this->musicDataModel->addFile(fpath);
             return;
         } else {
             this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath));
