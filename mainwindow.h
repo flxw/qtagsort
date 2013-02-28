@@ -10,7 +10,6 @@
 # include "resultdialog.h"
 # include "musicdatamodel.h"
 # include "musictableeditdelegate.h"
-# include "brainzlineedit.h"
 
 namespace Ui {
     class MainWindow;
@@ -30,6 +29,9 @@ public:
     void dragEnterEvent(QDragEnterEvent *ev);
     void dropEvent(QDropEvent *event);
 
+private:
+    void processFile(const QString& fpath, unsigned int &proc);
+    void checkIfReadyForOp(void);
     /* signals and slots ===================== */
 signals:
     void addFilesComplete();
@@ -38,32 +40,24 @@ public slots:
     void reactOnPatternChange(QString p);
     void setDestPath(void);
     void showAboutQt(void);
-    void editSourceFiles(void);
+    void showFileLocation(const QModelIndex &mdi);
     void cleanup(void);
 
-    /* on the tag tab */
     void addToDB(void);
     void deleteDBEntry(void);
-    
-private:
-    void processFile(const QString& fpath);
-    void checkIfReadyForOp(void);
 
     /* attributes ============================ */
 public:
     const QRegExp        supportedFiletypes;
-    unsigned int         entriesRead; /* counter of how many directory entries have been read */
 
 private:
     PatternValidator    *patternValidator;
     FileHandler          *fileHandler;
 
-    Ui::MainWindow          *ui;
-    AuthorDialog            *authorDialog;
-    ResultDialog            *resultDialog;
-    MusicDataModel          *musicDataModel;
-    MusicTableEditDelegate *musicEditDelegate;
-    BrainzLineEdit          *brainzLineEdit;
+    Ui::MainWindow       *ui;
+    AuthorDialog         *authorDialog;
+    ResultDialog         *resultDialog;
+    MusicDataModel       *musicDataModel;
 };
 
 #endif // MAINWINDOW_H
