@@ -164,7 +164,7 @@ QVariant MusicDataModel::headerData(int section, Qt::Orientation orientation, in
 
     if (orientation == Qt::Horizontal) {
         switch (section) {
-        case 0: retVariant.setValue(tr("Arist")); break;
+        case 0: retVariant.setValue(tr("Artist")); break;
         case 1: retVariant.setValue(tr("Album")); break;
         case 2: retVariant.setValue(tr("Title")); break;
         case 3: retVariant.setValue(tr("Tracknumber")); break;
