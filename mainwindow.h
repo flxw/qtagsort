@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
-    /* methos    ============================= */
+    /* methods    ============================ */
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -32,6 +32,7 @@ public:
 private:
     void processFile(const QString& fpath, unsigned int &proc);
     void checkIfReadyForOp(void);
+
     /* signals and slots ===================== */
 signals:
     void addFilesComplete();
@@ -45,6 +46,7 @@ public slots:
 
     void addToDB(void);
     void deleteDBEntry(void);
+    void dispatchAutotag(void);
 
     /* attributes ============================ */
 public:

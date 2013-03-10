@@ -38,7 +38,7 @@ QValidator::State PatternValidator::validate(QString &pattern, int &pos) const {
             if (++i >= pattern.length()) {
                 retState = QValidator::Intermediate;
             } else {
-                switch (pattern.at(i).toAscii()) {
+                switch (pattern.at(i).toLatin1()) {
                 case 'a': retState = QValidator::Acceptable; break;
                 case 'r': retState = QValidator::Acceptable; break;
                 case 't': retState = QValidator::Acceptable; break;

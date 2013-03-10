@@ -4,8 +4,10 @@
 
 # include <QFileDialog>
 # include <QUrl>
+# include <QMimeData>
 # include <QDirIterator>
 # include <QMessageBox>
+# include <QTableView>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
@@ -22,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->patternEdit->setValidator(this->patternValidator);
 
     this->ui->tableView->setModel(this->musicDataModel);
-    this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     this->setWindowTitle(QString(PROGNAME));
 
@@ -34,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
     connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
+    connect(this->ui->autotagSelectedButton, SIGNAL(clicked()), this, SLOT(dispatchAutotag()));
     /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
@@ -217,6 +220,16 @@ void MainWindow::deleteDBEntry() {
 
     this->ui->tableView->setUpdatesEnabled(true);
     this->ui->tableView->update(QModelIndex());
+}
+
+void MainWindow::dispatchAutotag() {
+    QList<QModelIndex> selectedRowList = this->ui->tableView->selectionModel()->selectedRows();
+
+    if (selectedRowList.size()) {
+        for (int i=0; i < selectedRowList.size(); ++i) {
+            this->fileHandler->autoTagEntry(selectedRowList.at(i));
+        }
+    }
 }
 
 /* =========================================== */
