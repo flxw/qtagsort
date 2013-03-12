@@ -83,7 +83,7 @@
     </widget>
    </item>
    <item row="3" column="2">
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="versionLabel">
      <property name="text">
       <string>the alpha</string>
      </property>
