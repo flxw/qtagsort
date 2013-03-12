@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network script
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     filehandler.cpp \
     authordialog.cpp \
     resultdialog.cpp \
-    musicdatamodel.cpp
+    musicdatamodel.cpp \
+    fingerprinter.cpp
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
@@ -26,11 +27,12 @@ HEADERS  += mainwindow.h \
     authordialog.h \
     resultdialog.h \
     musicdatamodel.h \
-    versioninfo.h
+    versioninfo.h \
+    fingerprinter.h
 
 FORMS    += mainwindow.ui \
     authordialog.ui \
     resultdialog.ui
 
 INCLUDEPATH += -I/usr/include/neon
-LIBS         += -ltag -lmusicbrainz5
+LIBS         += -ltag -lchromaprint -lavformat -lavcodec -lavutil
