@@ -42,6 +42,7 @@ public slots:
     void setDestPath(void);
     void showAboutQt(void);
     void showFileLocation(const QModelIndex &mdi);
+    void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
     void cleanup(void);
 
     void addToDB(void);

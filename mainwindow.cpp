@@ -1,6 +1,7 @@
 # include "mainwindow.h"
 # include "ui_mainwindow.h"
 # include "versioninfo.h"
+# include "proposalselectiondialog.h"
 
 # include <QFileDialog>
 # include <QUrl>
@@ -37,6 +38,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
     connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
     connect(this->ui->autotagSelectedButton, SIGNAL(clicked()), this, SLOT(dispatchAutotag()));
+    connect(this->fileHandler, SIGNAL(status(QString, int)), this->ui->statusBar, SLOT(showMessage(QString, int)));
+    connect(this->fileHandler, SIGNAL(relayedMatches(QStringList,QStringList,QStringList)),
+            this, SLOT(displayMatchSelectionDialog(QStringList, QStringList,QStringList)));
     /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
@@ -114,7 +118,7 @@ void MainWindow::dropEvent(QDropEvent *event) {
                 }
             }
         }
-        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
+        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed), 5000);
         this->checkIfReadyForOp();
 
     }
@@ -162,11 +166,26 @@ void MainWindow::showFileLocation(const QModelIndex &mdi) {
     }
 }
 
+void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al) {
+    ProposalSelectionDialog psd(tl, rl, al, this->ui->fileLocLabel->text());
+
+    if (psd.exec() == QDialog::Accepted) {
+        int row = this->ui->tableView->selectionModel()->selectedRows().at(0).row();
+
+        QString buffer = psd.getArtistSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 0), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getReleaseSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 1), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getTitleSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 2), QVariant(buffer), Qt::EditRole);
+    }
+}
+
 void MainWindow::cleanup() {
     this->musicDataModel->clearData();
-
     this->ui->progressBar->setValue(0);
-
     this->checkIfReadyForOp();
 }
 
@@ -206,7 +225,7 @@ void MainWindow::addToDB() {
                 }
             }
         }
-        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
+        this->ui->statusBar->showMessage(tr("entries read: %1, entries processed: %2").arg(read).arg(processed), 5000);
         this->checkIfReadyForOp();
     }
 }
@@ -242,13 +261,16 @@ void MainWindow::processFile(const QString &fpath, unsigned int &proc) {
             proc += this->musicDataModel->addFile(fpath);
             return;
         } else {
-            this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath));
+            this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath), 5000);
         }
     } else {
-        this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath));
+        this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath), 5000);
     }
 }
 
 void MainWindow::checkIfReadyForOp(void) {
-    this->ui->beginSortButton->setEnabled(this->musicDataModel->isReady());
+    if (this->musicDataModel->isReady()) {
+        this->ui->beginSortButton->setEnabled(true);
+        this->ui->statusBar->clearMessage();
+    }
 }
