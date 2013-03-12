@@ -1,5 +1,12 @@
-# include "fingerprinter.h"
+# include <QNetworkRequest>
+# include <QNetworkReply>
+# include <QUrl>
+# include <QScriptValueIterator>
 # include <string.h>
+
+# include "fingerprinter.h"
+# include "versioninfo.h"
+
 
 extern "C" {
 # define __STDC_CONSTANT_MACROS
@@ -23,14 +30,38 @@ extern "C" {
 #define AVMEDIA_TYPE_AUDIO CODEC_TYPE_AUDIO
 #endif
 
+/* methods =================================== */
+Fingerprinter::Fingerprinter(QObject *parent) : QObject(parent) {
+    this->nwaManager = new QNetworkAccessManager(this);
 
-QString Fingerprinter::getFingerpint(const QString &filename) {
+    connect(this->nwaManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(receiveNetAnswer(QNetworkReply *)));
+    connect(this->nwaManager, SIGNAL(networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility)),
+            this, SLOT(networkAccessChanged(QNetworkAccessManager::NetworkAccessibility)));
+}
+
+
+void Fingerprinter::getMusicBrainzData(const QString &filename) {
+    emit status(tr("Building acoustID request..."), 5000);
+    QString request("http://api.acoustid.org/v2/lookup");
+    int duration;
+
+    /* TODO: Get my own API key! */
+    request.append("?client=8XaBELgH");
+    request.append("&meta=recordings+releasegroups+compress");
+    request.append("&fingerprint=").append(getFingerprint(filename, duration));
+    request.append("&duration=").append(QString::number(duration));
+
+    this->nwaManager->get(QNetworkRequest(QUrl(request)));
+    emit status(tr("Built acoustID request....querying server..."), 5000);
+}
+
+QString Fingerprinter::getFingerprint(const QString &filename, int &duration) {
     QString qfingerprint;
     QByteArray filenameByteArray = filename.toLocal8Bit();
     ChromaprintContext *chromaprint_ctx;
     char *file_name, *fingerprint;
     int algo = CHROMAPRINT_ALGORITHM_DEFAULT;
-    int max_length = 120, duration;
+    int max_length = 120;
     int16_t *buffer1, *buffer2;
 
     /* initialize the av* libraries */
@@ -46,12 +77,9 @@ QString Fingerprinter::getFingerpint(const QString &filename) {
         qDebug("ERROR: unable to calculate fingerprint for file %s", file_name);
     }
 
-    qDebug("FILE=%s", file_name);
-    qDebug("DURATION=%d", duration);
     if (!chromaprint_get_fingerprint(chromaprint_ctx, &fingerprint)) {
         qDebug("ERROR: unable to calculate fingerprint for file %s, skipping", file_name);
     }
-    qDebug("FINGERPRINT=%s", fingerprint);
 
     /* save fingerprint */
     qfingerprint = QString::fromLocal8Bit(fingerprint, strlen(fingerprint));
@@ -65,11 +93,10 @@ QString Fingerprinter::getFingerpint(const QString &filename) {
     return qfingerprint;
 }
 
-int
-Fingerprinter::decode_audio_file(ChromaprintContext *chromaprint_ctx,
-                                   int16_t *buffer1, int16_t *buffer2,
-                                   const char *file_name,
-                                   int max_length, int *duration) {
+int Fingerprinter::decode_audio_file(ChromaprintContext *chromaprint_ctx,
+                                     int16_t *buffer1, int16_t *buffer2,
+                                     const char *file_name,
+                                     int max_length, int *duration) {
     AVFormatContext *format_ctx = NULL;
     AVCodecContext *codec_ctx = NULL;
     AVCodec *codec = NULL;
@@ -226,4 +253,90 @@ done:
     }
 
     return ok;
+}
+
+/* slots ===================================== */
+void Fingerprinter::receiveNetAnswer(QNetworkReply *reply) {
+    if (QNetworkReply::NoError == reply->error()) {
+        QString jsonString = QString(reply->readAll());
+        QScriptValue scValue = scriptEngine.evaluate("(" + jsonString + ")");
+
+        /* the result contains an OBJECT in the results list
+             * for each matched fingerprint!
+             * as a consequence, we need to iterate over these objects
+             * an call their properties as appropriate
+             *
+             * ====== this is the results object structure ========
+             "results": [{
+                "score": 1.0,
+                "id": "9ff43b6a-4f16-427c-93c2-92307ca505e0",
+                >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                "recordings": [{
+                  "duration": 639,
+                  ================================================
+                  "releasegroups": [{
+                    "type": "Album",
+                    "id": "ddaa2d4d-314e-3e7c-b1d0-f6d207f5aa2f",
+                    "title": "Before the Dawn Heals Us"
+                  }],
+                  ================================================
+                  "title": "Lower Your Eyelids to Die With the Sun",
+                  "id": "cd2e7c47-16f5-46c6-a37c-a1eb7bf599ff",
+                  ================================================
+                    "artists": [{
+                    "id": "6d7b7cd4-254b-4c25-83f6-dd20f98ceacd",
+                    "name": "M83"
+                  }]
+                  ================================================
+                }]
+                <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+              }]
+             */
+        if (scValue.property("status").toString() == QString("ok")) {
+            QScriptValueIterator resultIterator(scValue.property("results"));
+            QStringList titleList, artistList, releaseList;
+            QString buffer;
+
+            while (resultIterator.hasNext()) {
+                resultIterator.next();
+
+                QScriptValueIterator recordingsIterator(resultIterator.value().property("recordings"));
+
+                while (recordingsIterator.hasNext()) {
+                    recordingsIterator.next();
+
+                    buffer = recordingsIterator.value().property("title").toString();
+                    if (!titleList.contains(buffer) && !buffer.isEmpty()) titleList.append(buffer);
+
+                    QScriptValueIterator artistIterator(recordingsIterator.value().property("artists"));
+                    while (artistIterator.hasNext()) {
+                        artistIterator.next();
+                        buffer = artistIterator.value().property("name").toString();
+                        if (!artistList.contains(buffer) && !buffer.isEmpty()) artistList.append(buffer);
+                    }
+
+                    QScriptValueIterator releaseIterator(recordingsIterator.value().property("releasegroups"));
+                    while (releaseIterator.hasNext()) {
+                        releaseIterator.next();
+                        buffer = releaseIterator.value().property("title").toString();
+                        if (!releaseList.contains(buffer) && !buffer.isEmpty()) releaseList.append(buffer);
+                    }
+                }
+            }
+
+            if (titleList.length() || artistList.length() || releaseList.length()) {
+                emit receivedGoodAnswer(titleList, releaseList, artistList);
+                emit status(tr("Received good answer...presenting matches...."), 5000);
+            }
+        } else {
+            emit status(tr("Fingerprint could not be matched... :("), 5000);
+        }
+    } else {
+        emit status(tr("Network error - QNetworkReply error code %1").arg(reply->error()), 5000);
+    }
+    delete reply;
+}
+
+void Fingerprinter::networkAccessChanged(QNetworkAccessManager::NetworkAccessibility na) {
+    emit status(tr("Network accessibility changed! Network access now %1!").arg((na > 0)?"accessible":"unavailable"), 5000);
 }

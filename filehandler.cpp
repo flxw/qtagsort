@@ -5,11 +5,21 @@
 
 FileHandler::FileHandler(MusicDataModel *datm, QObject *parent) : QObject(parent) {
     this->dm = datm;
+
+    // Signals and Slots
+    connect(&fp, SIGNAL(status(QString, int)), this, SIGNAL(status(QString, int)));
+    connect(&fp, SIGNAL(receivedGoodAnswer(QStringList,QStringList,QStringList)),
+            this, SIGNAL(relayedMatches(QStringList,QStringList,QStringList)));
 }
 
 /* =========================================== */
 /*      implementation of public functions     */
 /* =========================================== */
+void FileHandler::autoTagEntry(const QModelIndex &mdi) {
+    QString filename = this->dm->getFileLocation(mdi);
+    fp.getMusicBrainzData(filename);
+}
+
 /* =========================================== */
 /*      implementation of public slots         */
 /* =========================================== */
