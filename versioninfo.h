@@ -2,6 +2,6 @@
 #define VESIONINFO_H
 
 # define PROGNAME "tagman"
-# define VERSION  "0.1"
+# define VERSION  "the beta"
 
 #endif // VESIONINFO_H
