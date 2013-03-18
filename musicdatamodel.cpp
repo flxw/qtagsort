@@ -87,7 +87,6 @@ int MusicDataModel::addFile(const QString &file) {
     fileData.isGood     = false;
 
     emit endInsertRows();
-    qDebug("db size: %i", this->db.size());
 
     return 1;
 }
