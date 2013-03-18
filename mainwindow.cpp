@@ -4,6 +4,7 @@
 # include "proposalselectiondialog.h"
 
 # include <QFileDialog>
+# include <QDropEvent>
 # include <QUrl>
 # include <QMimeData>
 # include <QDirIterator>
@@ -79,48 +80,26 @@ QString MainWindow::expandExamplePattern() {
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *ev) {
-    /* TODO: check MIME type here */
+    ev->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *ev) {
     ev->acceptProposedAction();
 }
 
 void MainWindow::dropEvent(QDropEvent *event) {
     const QMimeData *mD = event->mimeData();
 
-    unsigned int read      = 0;
-    unsigned int processed = 0;
-
     /* check if we can get the location of the files dragged into the window */
     if (mD->hasUrls()) {
         QList<QUrl> urlList = mD->urls();
+        QStringList strl;
 
-        QString tempFilename;
-
-        /* check if local file or folder */
         for (int i=0; i < urlList.size(); ++i) {
-            tempFilename = urlList.at(i).toLocalFile();
-            QFileInfo fi(tempFilename);
-
-            /* check wether the path leads to a file */
-            if (fi.isFile() && tempFilename.contains(this->supportedFiletypes)) {
-                ++read;
-                this->processFile(tempFilename, processed);
-            } else if (fi.isDir()){
-                /* the path leads to a directory, walk it! */
-                QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
-
-                while (dirIt.hasNext()) {
-                    dirIt.next();
-
-                    ++read;
-                    if ( dirIt.fileInfo().isFile() ) {
-                        this->processFile(dirIt.filePath(), processed);
-                    }
-                }
-            }
+            strl.append(urlList.at(i).toString().mid(7));
         }
-        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed), 5000);
-        this->checkIfReadyForOp();
 
+        this->processEntryList(strl);
     }
 }
 
@@ -133,7 +112,7 @@ void MainWindow::reactOnPatternChange(QString p) {
         this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
     } else {
         this->musicDataModel->setPattern(QString());
-        this->ui->parsedPatternDispLabel->setText("");
+        this->ui->parsedPatternDispLabel->clear();
     }
 
     this->checkIfReadyForOp();
@@ -162,7 +141,7 @@ void MainWindow::showFileLocation(const QModelIndex &mdi) {
     if (this->ui->tableView->selectionModel()->selectedRows().size() == 1) {
         this->ui->fileLocLabel->setText(this->musicDataModel->getFileLocation(mdi));
     } else {
-        this->ui->fileLocLabel->setText(QString());
+        this->ui->fileLocLabel->clear();
     }
 }
 
@@ -189,7 +168,6 @@ void MainWindow::cleanup() {
     this->checkIfReadyForOp();
 }
 
-/* > on the tag tab */
 void MainWindow::addToDB() {
     // select either files or folders with dialog and
     // add like added with DragEvent
@@ -197,36 +175,8 @@ void MainWindow::addToDB() {
     fd.setFileMode(QFileDialog::ExistingFiles);
 
     if (fd.exec() == QFileDialog::Accepted) {
-        /* TODO: rewrite with QDirIterator... */
         QStringList strl = fd.selectedFiles();
-        QStringList::iterator strlIt = strl.begin();
-
-        unsigned int read      = 0;
-        unsigned int processed = 0;
-
-        for (; strlIt != strl.end(); ++strlIt) {
-            QFileInfo fi(*strlIt);
-
-            /* check wether the path leads to a file */
-            if (fi.isFile() && strlIt->contains(this->supportedFiletypes)) {
-                ++read;
-                this->processFile(*strlIt, processed);
-            } else if (fi.isDir()){
-                /* the path leads to a directory, walk it! */
-                QDirIterator dirIt(*strlIt, QDirIterator::Subdirectories);
-
-                while (dirIt.hasNext()) {
-                    dirIt.next();
-
-                    ++read;
-                    if (dirIt.fileInfo().isFile()) {
-                        this->processFile(dirIt.filePath(), processed);
-                    }
-                }
-            }
-        }
-        this->ui->statusBar->showMessage(tr("entries read: %1, entries processed: %2").arg(read).arg(processed), 5000);
-        this->checkIfReadyForOp();
+        this->processEntryList(strl);
     }
 }
 
@@ -254,18 +204,48 @@ void MainWindow::dispatchAutotag() {
 /* =========================================== */
 /*       Definition of private functions       */
 /* =========================================== */
-void MainWindow::processFile(const QString &fpath, unsigned int &proc) {
+void MainWindow::processEntryList(const QStringList &el) {
+    QString tempFilename;
+    int i=0, processed=0;
+
+    /* check if local file or folder */
+    for (; i < el.size(); ++i) {
+        tempFilename = el.at(i);
+        QFileInfo fi(tempFilename);
+
+        /* check wether the path leads to a file */
+        if (fi.isFile() && tempFilename.contains(this->supportedFiletypes)) {
+            this->processFile(tempFilename, processed);
+        } else if (fi.isDir()){
+            /* the path leads to a directory, walk it! */
+            QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
+
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                ++i;
+                if ( dirIt.fileInfo().isFile() ) {
+                    this->processFile(dirIt.filePath(), processed);
+                }
+            }
+        }
+    }
+
+    this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(i).arg(processed), 5000);
+    this->checkIfReadyForOp();
+}
+
+void MainWindow::processFile(const QString &fpath, int &proc) {
     if (fpath.contains(this->supportedFiletypes)) {
         QFileInfo fi(fpath);
         if (fi.isReadable()) {
             proc += this->musicDataModel->addFile(fpath);
             return;
-        } else {
+        } /*else {
             this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath), 5000);
         }
     } else {
         this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath), 5000);
-    }
+    */}
 }
 
 void MainWindow::checkIfReadyForOp(void) {

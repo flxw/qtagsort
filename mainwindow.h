@@ -27,10 +27,12 @@ public:
     QString expandExamplePattern();
 
     void dragEnterEvent(QDragEnterEvent *ev);
+    void dragMoveEvent(QDragMoveEvent *ev);
     void dropEvent(QDropEvent *event);
 
 private:
-    void processFile(const QString& fpath, unsigned int &proc);
+    void processEntryList(const QStringList &el);
+    void processFile(const QString& fpath, int &proc);
     void checkIfReadyForOp(void);
 
     /* signals and slots ===================== */
