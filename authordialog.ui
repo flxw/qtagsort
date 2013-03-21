@@ -14,24 +14,17 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="5" column="1">
-    <widget class="QLabel" name="label_7">
+   <item row="1" column="2">
+    <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Project page&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>3rd January 2013</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="2">
-    <widget class="QLabel" name="label_8">
+   <item row="2" column="2">
+    <widget class="QLabel" name="versionLabel">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.github.com/flxw/tagman&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;github.com/flxw/tagman&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Written by&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>the alpha</string>
      </property>
     </widget>
    </item>
@@ -48,51 +41,41 @@
      </property>
     </spacer>
    </item>
-   <item row="2" column="1">
-    <widget class="QLabel" name="label_2">
+   <item row="4" column="1">
+    <widget class="QLabel" name="label_7">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Started&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Project page&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <spacer name="verticalSpacer_2">
+   <item row="5" column="1" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Horizontal</enum>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="2">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>3rd January 2013</string>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="2" column="1">
     <widget class="QLabel" name="label_3">
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Version&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="2">
-    <widget class="QLabel" name="versionLabel">
+   <item row="4" column="2">
+    <widget class="QLabel" name="label_8">
      <property name="text">
-      <string>the alpha</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.flxw.de/qtagsort&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;github.com/flxw/tagman&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <widget class="QLabel" name="label_4">
+   <item row="1" column="1">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>flxw</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Started&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -108,16 +91,6 @@
       </size>
      </property>
     </spacer>
-   </item>
-   <item row="6" column="1" colspan="3">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
