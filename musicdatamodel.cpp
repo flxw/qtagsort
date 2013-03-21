@@ -87,9 +87,8 @@ int MusicDataModel::addFile(const QString &file) {
     fileData.isGood     = false;
 
     emit endInsertRows();
-    qDebug("db size: %i", this->db.size());
 
-    return 0;
+    return 1;
 }
 
 bool MusicDataModel::isReady(void) {
@@ -164,7 +163,7 @@ QVariant MusicDataModel::headerData(int section, Qt::Orientation orientation, in
 
     if (orientation == Qt::Horizontal) {
         switch (section) {
-        case 0: retVariant.setValue(tr("Arist")); break;
+        case 0: retVariant.setValue(tr("Artist")); break;
         case 1: retVariant.setValue(tr("Album")); break;
         case 2: retVariant.setValue(tr("Title")); break;
         case 3: retVariant.setValue(tr("Tracknumber")); break;

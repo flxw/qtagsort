@@ -1,11 +1,15 @@
 # include "mainwindow.h"
 # include "ui_mainwindow.h"
 # include "versioninfo.h"
+# include "proposalselectiondialog.h"
 
 # include <QFileDialog>
+# include <QDropEvent>
 # include <QUrl>
+# include <QMimeData>
 # include <QDirIterator>
 # include <QMessageBox>
+# include <QTableView>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
@@ -22,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->patternEdit->setValidator(this->patternValidator);
 
     this->ui->tableView->setModel(this->musicDataModel);
-    this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     this->setWindowTitle(QString(PROGNAME));
 
@@ -34,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
     connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
+    connect(this->ui->autotagSelectedButton, SIGNAL(clicked()), this, SLOT(dispatchAutotag()));
+    connect(this->fileHandler, SIGNAL(status(QString, int)), this->ui->statusBar, SLOT(showMessage(QString, int)));
+    connect(this->fileHandler, SIGNAL(relayedMatches(QStringList,QStringList,QStringList)),
+            this, SLOT(displayMatchSelectionDialog(QStringList, QStringList,QStringList)));
     /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
@@ -72,48 +80,26 @@ QString MainWindow::expandExamplePattern() {
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *ev) {
-    /* TODO: check MIME type here */
+    ev->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *ev) {
     ev->acceptProposedAction();
 }
 
 void MainWindow::dropEvent(QDropEvent *event) {
     const QMimeData *mD = event->mimeData();
 
-    unsigned int read      = 0;
-    unsigned int processed = 0;
-
     /* check if we can get the location of the files dragged into the window */
     if (mD->hasUrls()) {
         QList<QUrl> urlList = mD->urls();
+        QStringList strl;
 
-        QString tempFilename;
-
-        /* check if local file or folder */
         for (int i=0; i < urlList.size(); ++i) {
-            tempFilename = urlList.at(i).toLocalFile();
-            QFileInfo fi(tempFilename);
-
-            /* check wether the path leads to a file */
-            if (fi.isFile() && tempFilename.contains(this->supportedFiletypes)) {
-                ++read;
-                this->processFile(tempFilename, processed);
-            } else if (fi.isDir()){
-                /* the path leads to a directory, walk it! */
-                QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
-
-                while (dirIt.hasNext()) {
-                    dirIt.next();
-
-                    ++read;
-                    if ( dirIt.fileInfo().isFile() ) {
-                        this->processFile(dirIt.filePath(), processed);
-                    }
-                }
-            }
+            strl.append(urlList.at(i).toString().mid(7));
         }
-        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
-        this->checkIfReadyForOp();
 
+        this->processEntryList(strl);
     }
 }
 
@@ -126,7 +112,7 @@ void MainWindow::reactOnPatternChange(QString p) {
         this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
     } else {
         this->musicDataModel->setPattern(QString());
-        this->ui->parsedPatternDispLabel->setText("");
+        this->ui->parsedPatternDispLabel->clear();
     }
 
     this->checkIfReadyForOp();
@@ -155,19 +141,33 @@ void MainWindow::showFileLocation(const QModelIndex &mdi) {
     if (this->ui->tableView->selectionModel()->selectedRows().size() == 1) {
         this->ui->fileLocLabel->setText(this->musicDataModel->getFileLocation(mdi));
     } else {
-        this->ui->fileLocLabel->setText(QString());
+        this->ui->fileLocLabel->clear();
+    }
+}
+
+void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al) {
+    ProposalSelectionDialog psd(tl, rl, al, this->ui->fileLocLabel->text());
+
+    if (psd.exec() == QDialog::Accepted) {
+        int row = this->ui->tableView->selectionModel()->selectedRows().at(0).row();
+
+        QString buffer = psd.getArtistSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 0), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getReleaseSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 1), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getTitleSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 2), QVariant(buffer), Qt::EditRole);
     }
 }
 
 void MainWindow::cleanup() {
     this->musicDataModel->clearData();
-
     this->ui->progressBar->setValue(0);
-
     this->checkIfReadyForOp();
 }
 
-/* > on the tag tab */
 void MainWindow::addToDB() {
     // select either files or folders with dialog and
     // add like added with DragEvent
@@ -175,36 +175,8 @@ void MainWindow::addToDB() {
     fd.setFileMode(QFileDialog::ExistingFiles);
 
     if (fd.exec() == QFileDialog::Accepted) {
-        /* TODO: rewrite with QDirIterator... */
         QStringList strl = fd.selectedFiles();
-        QStringList::iterator strlIt = strl.begin();
-
-        unsigned int read      = 0;
-        unsigned int processed = 0;
-
-        for (; strlIt != strl.end(); ++strlIt) {
-            QFileInfo fi(*strlIt);
-
-            /* check wether the path leads to a file */
-            if (fi.isFile() && strlIt->contains(this->supportedFiletypes)) {
-                ++read;
-                this->processFile(*strlIt, processed);
-            } else if (fi.isDir()){
-                /* the path leads to a directory, walk it! */
-                QDirIterator dirIt(*strlIt, QDirIterator::Subdirectories);
-
-                while (dirIt.hasNext()) {
-                    dirIt.next();
-
-                    ++read;
-                    if (dirIt.fileInfo().isFile()) {
-                        this->processFile(dirIt.filePath(), processed);
-                    }
-                }
-            }
-        }
-        this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(read).arg(processed));
-        this->checkIfReadyForOp();
+        this->processEntryList(strl);
     }
 }
 
@@ -219,23 +191,66 @@ void MainWindow::deleteDBEntry() {
     this->ui->tableView->update(QModelIndex());
 }
 
+void MainWindow::dispatchAutotag() {
+    QList<QModelIndex> selectedRowList = this->ui->tableView->selectionModel()->selectedRows();
+
+    if (selectedRowList.size()) {
+        for (int i=0; i < selectedRowList.size(); ++i) {
+            this->fileHandler->autoTagEntry(selectedRowList.at(i));
+        }
+    }
+}
+
 /* =========================================== */
 /*       Definition of private functions       */
 /* =========================================== */
-void MainWindow::processFile(const QString &fpath, unsigned int &proc) {
+void MainWindow::processEntryList(const QStringList &el) {
+    QString tempFilename;
+    int i=0, processed=0;
+
+    /* check if local file or folder */
+    for (; i < el.size(); ++i) {
+        tempFilename = el.at(i);
+        QFileInfo fi(tempFilename);
+
+        /* check wether the path leads to a file */
+        if (fi.isFile() && tempFilename.contains(this->supportedFiletypes)) {
+            this->processFile(tempFilename, processed);
+        } else if (fi.isDir()){
+            /* the path leads to a directory, walk it! */
+            QDirIterator dirIt(tempFilename, QDirIterator::Subdirectories);
+
+            while (dirIt.hasNext()) {
+                dirIt.next();
+                ++i;
+                if ( dirIt.fileInfo().isFile() ) {
+                    this->processFile(dirIt.filePath(), processed);
+                }
+            }
+        }
+    }
+
+    this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(i).arg(processed), 5000);
+    this->checkIfReadyForOp();
+}
+
+void MainWindow::processFile(const QString &fpath, int &proc) {
     if (fpath.contains(this->supportedFiletypes)) {
         QFileInfo fi(fpath);
         if (fi.isReadable()) {
             proc += this->musicDataModel->addFile(fpath);
             return;
-        } else {
-            this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath));
+        } /*else {
+            this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath), 5000);
         }
     } else {
-        this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath));
-    }
+        this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath), 5000);
+    */}
 }
 
 void MainWindow::checkIfReadyForOp(void) {
-    this->ui->beginSortButton->setEnabled(this->musicDataModel->isReady());
+    if (this->musicDataModel->isReady()) {
+        this->ui->beginSortButton->setEnabled(true);
+        this->ui->statusBar->clearMessage();
+    }
 }
