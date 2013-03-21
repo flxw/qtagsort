@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
-    /* methos    ============================= */
+    /* methods    ============================ */
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -27,11 +27,14 @@ public:
     QString expandExamplePattern();
 
     void dragEnterEvent(QDragEnterEvent *ev);
+    void dragMoveEvent(QDragMoveEvent *ev);
     void dropEvent(QDropEvent *event);
 
 private:
-    void processFile(const QString& fpath, unsigned int &proc);
+    void processEntryList(const QStringList &el);
+    void processFile(const QString& fpath, int &proc);
     void checkIfReadyForOp(void);
+
     /* signals and slots ===================== */
 signals:
     void addFilesComplete();
@@ -41,10 +44,12 @@ public slots:
     void setDestPath(void);
     void showAboutQt(void);
     void showFileLocation(const QModelIndex &mdi);
+    void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
     void cleanup(void);
 
     void addToDB(void);
     void deleteDBEntry(void);
+    void dispatchAutotag(void);
 
     /* attributes ============================ */
 public:

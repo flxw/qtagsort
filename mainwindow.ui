@@ -51,7 +51,11 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QLineEdit" name="patternEdit"/>
+        <widget class="QLineEdit" name="patternEdit">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Provide a structure for the directories that will be created during sorting:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%a&lt;/span&gt;  artist&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%r&lt;/span&gt;  album/release&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%t&lt;/span&gt;  title&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%n&lt;/span&gt;  track number&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="3">
         <widget class="QLineEdit" name="targetDispLabel">
@@ -141,7 +145,7 @@
         </widget>
        </item>
        <item row="2" column="2">
-        <widget class="QPushButton" name="updateEntryButton">
+        <widget class="QPushButton" name="autotagSelectedButton">
          <property name="text">
           <string>Autotag selected items</string>
          </property>
@@ -194,7 +198,7 @@
      <x>0</x>
      <y>0</y>
      <width>521</width>
-     <height>24</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -225,7 +229,10 @@
   </action>
   <action name="actionAuthor">
    <property name="text">
-    <string>QSongsort</string>
+    <string>qsongsort</string>
+   </property>
+   <property name="toolTip">
+    <string>qsongsort</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
