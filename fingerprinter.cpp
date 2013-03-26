@@ -325,8 +325,8 @@ void Fingerprinter::receiveNetAnswer(QNetworkReply *reply) {
             }
 
             if (titleList.length() || artistList.length() || releaseList.length()) {
-                emit receivedGoodAnswer(titleList, releaseList, artistList);
                 emit status(tr("Received good answer...presenting matches...."), 5000);
+                emit receivedGoodAnswer(titleList, releaseList, artistList);
             }
         } else {
             emit status(tr("Fingerprint could not be matched... :("), 5000);
@@ -334,7 +334,8 @@ void Fingerprinter::receiveNetAnswer(QNetworkReply *reply) {
     } else {
         emit status(tr("Network error - QNetworkReply error code %1").arg(reply->error()), 5000);
     }
-    delete reply;
+
+    reply->deleteLater();
 }
 
 void Fingerprinter::networkAccessChanged(QNetworkAccessManager::NetworkAccessibility na) {
