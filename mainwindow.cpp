@@ -26,7 +26,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->patternEdit->setValidator(this->patternValidator);
 
     this->ui->tableView->setModel(this->musicDataModel);
+# if QT_VERSION < 0x050000
+    this->ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+# else
     this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+# endif
 
     this->setWindowTitle(QString(PROGNAME));
 
@@ -183,12 +187,9 @@ void MainWindow::addToDB() {
 void MainWindow::deleteDBEntry() {
     QModelIndexList sil = this->ui->tableView->selectionModel()->selectedRows();
 
-    for (int i=0; i<sil.length(); ++i) {
+    for (int i=sil.length()-1; i>=0; --i) {
         this->musicDataModel->removeRow(sil.at(i).row(), QModelIndex());
     }
-
-    this->ui->tableView->setUpdatesEnabled(true);
-    this->ui->tableView->update(QModelIndex());
 }
 
 void MainWindow::dispatchAutotag() {

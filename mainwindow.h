@@ -9,7 +9,6 @@
 # include "authordialog.h"
 # include "resultdialog.h"
 # include "musicdatamodel.h"
-# include "musictableeditdelegate.h"
 
 namespace Ui {
     class MainWindow;
