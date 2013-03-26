@@ -227,6 +227,7 @@ bool MusicDataModel::setHeaderData(int section, Qt::Orientation orientation, con
 
 bool MusicDataModel::removeRow(int row, const QModelIndex &parent) {
     this->db.removeAt(row);
+    emit dataChanged(this->index(row,0), this->index(row+1,0));
     return true;
 }
 
