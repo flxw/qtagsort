@@ -8,7 +8,7 @@ QT       += core gui network script
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = tagman
+TARGET = qtagsort
 TEMPLATE = app
 
 
