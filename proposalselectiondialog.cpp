@@ -1,5 +1,6 @@
 # include "proposalselectiondialog.h"
 # include "ui_proposalselectiondialog.h"
+
 # include <QListView>
 # include <QItemSelectionModel>
 # include <QVariant>
@@ -20,6 +21,9 @@ ProposalSelectionDialog::ProposalSelectionDialog(QStringList tl, QStringList rl,
 
 ProposalSelectionDialog::~ProposalSelectionDialog() {
     delete ui;
+    delete artistListModel;
+    delete titleListModel;
+    delete releaseListModel;
 }
 
 QString ProposalSelectionDialog::getTitleSelection() {
