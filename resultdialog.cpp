@@ -15,16 +15,8 @@ ResultDialog::~ResultDialog()
 
 
 void ResultDialog::prepareShow(FileHandler::HandleReport res) {
-    const unsigned int total = res.failed + res.handled;
-
-    this->ui->failureCountLabel->setText(tr("Failed %1").arg(res.failed));
-    this->ui->succesCountLabel->setText(tr("Successful: %1").arg(res.handled));
-
-    this->ui->failureBar->setMaximum(total);
-    this->ui->successBar->setMaximum(total);
-
-    this->ui->failureBar->setValue(res.failed);
-    this->ui->successBar->setValue(res.handled);
+    this->ui->failureCountLabel->setText(QString::number(res.failed));
+    this->ui->succesCountLabel->setText(QString::number(res.handled));
 
     this->show();
 }
