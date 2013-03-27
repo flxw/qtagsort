@@ -231,6 +231,7 @@ void MainWindow::processEntryList(const QStringList &el) {
         }
     }
 
+    this->ui->tableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
     this->ui->statusBar->showMessage(tr("%1 entries read, %2 entries processed").arg(i).arg(processed), 5000);
     this->checkIfReadyForOp();
 }
