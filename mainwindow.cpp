@@ -168,7 +168,8 @@ void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QSt
 
 void MainWindow::cleanup() {
     this->musicDataModel->clearData();
-    this->ui->progressBar->setValue(0);
+    this->ui->progressBar->reset();
+    this->ui->fileLocLabel->clear();
     this->checkIfReadyForOp();
 }
 
