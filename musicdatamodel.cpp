@@ -45,16 +45,12 @@ const QString MusicDataModel::PH_TITLE   = QString("%t");
 const QString MusicDataModel::PH_TRACKNO = QString("%n");
 const QString MusicDataModel::PH_YEAR    = QString("%y");
 
-MusicDataModel::MusicDataModel(QObject *parent) :
-    QAbstractTableModel(parent)
-{
+MusicDataModel::MusicDataModel(QObject *parent) : QAbstractTableModel(parent) {
 }
 
 /* =========================================== */
 /*       Definition  of public functions       */
 /* =========================================== */
-
-
 QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBstart(void) const {
     return this->db.begin();
 }
@@ -69,8 +65,17 @@ QString MusicDataModel::getFileLocation(const QModelIndex &mdi) const {
 
 int MusicDataModel::addFile(const QString &file) {
     TagLib::FileRef fr(file.toStdString().c_str(), false);
+    bool isDuplicate = false;
 
-    if (fr.isNull() || fr.tag()->isEmpty()) return 0;
+    /* iterate through the whole database and find out whether this
+     * file is already inside it */
+    for (QList<MusicFileData>::const_iterator it = this->db.begin();
+         it != this->db.end() && !isDuplicate;
+         ++it) {
+        isDuplicate = (it->location == file);
+    }
+
+    if (fr.isNull() || fr.tag()->isEmpty() || isDuplicate) return 0;
 
     emit beginInsertRows(QModelIndex(), this->db.size()+1, this->db.size()+1);
 
@@ -176,7 +181,7 @@ QVariant MusicDataModel::headerData(int section, Qt::Orientation orientation, in
 }
 
 QVariant MusicDataModel::data(const QModelIndex &index, int role) const {
-    /* leave out check for role here - we deliver the same content for every role */
+    /* avoid tableView quirks by only delivering data on specific roles */
     if (role != Qt::DisplayRole && role != Qt::EditRole) {
         return QVariant();
     }
