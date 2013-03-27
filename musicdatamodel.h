@@ -30,8 +30,6 @@ public:
 public:
     explicit MusicDataModel(QObject *parent = 0);
 
-    /* adds a file to the database assuming that permissions and filetype are ok */
-
     QList<MusicDataModel::MusicFileData>::const_iterator getDBstart(void) const;
     QList<MusicDataModel::MusicFileData>::const_iterator getDBend(void) const;
 
