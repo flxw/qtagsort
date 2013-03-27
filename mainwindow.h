@@ -39,16 +39,17 @@ signals:
     void addFilesComplete();
 
 public slots:
-    void reactOnPatternChange(QString p);
     void setDestPath(void);
-    void showAboutQt(void);
-    void showFileLocation(const QModelIndex &mdi);
-    void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
-    void cleanup(void);
-
+    void reactOnPatternChange(QString p);
     void addToDB(void);
     void deleteDBEntry(void);
     void dispatchAutotag(void);
+    void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
+
+    void showAboutQt(void);
+    void showFileLocation(const QModelIndex &mdi);
+
+    void cleanup(void);
 
     /* attributes ============================ */
 public:

@@ -110,18 +110,6 @@ void MainWindow::dropEvent(QDropEvent *event) {
 /* =========================================== */
 /*       Definition  of public slots           */
 /* =========================================== */
-void MainWindow::reactOnPatternChange(QString p) {
-    if ( this->patternValidator->isValid(p) ) {
-        this->musicDataModel->setPattern(p);
-        this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
-    } else {
-        this->musicDataModel->setPattern(QString());
-        this->ui->parsedPatternDispLabel->clear();
-    }
-
-    this->checkIfReadyForOp();
-}
-
 void MainWindow::setDestPath(void) {
     QString dest = QFileDialog::getExistingDirectory(this,\
                                                     tr("Select the directory that shall contain the sorted files"),\
@@ -137,39 +125,15 @@ void MainWindow::setDestPath(void) {
     }
 }
 
-void MainWindow::showAboutQt() {
-    QMessageBox::aboutQt(this, tr("About Qt"));
-}
-
-void MainWindow::showFileLocation(const QModelIndex &mdi) {
-    if (this->ui->tableView->selectionModel()->selectedRows().size() == 1) {
-        this->ui->fileLocLabel->setText(this->musicDataModel->getFileLocation(mdi));
+void MainWindow::reactOnPatternChange(QString p) {
+    if ( this->patternValidator->isValid(p) ) {
+        this->musicDataModel->setPattern(p);
+        this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
     } else {
-        this->ui->fileLocLabel->clear();
+        this->musicDataModel->setPattern(QString());
+        this->ui->parsedPatternDispLabel->clear();
     }
-}
 
-void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al) {
-    ProposalSelectionDialog psd(tl, rl, al, this->ui->fileLocLabel->text());
-
-    if (psd.exec() == QDialog::Accepted) {
-        int row = this->ui->tableView->selectionModel()->selectedRows().at(0).row();
-
-        QString buffer = psd.getArtistSelection();
-        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 0), QVariant(buffer), Qt::EditRole);
-
-        buffer = psd.getReleaseSelection();
-        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 1), QVariant(buffer), Qt::EditRole);
-
-        buffer = psd.getTitleSelection();
-        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 2), QVariant(buffer), Qt::EditRole);
-    }
-}
-
-void MainWindow::cleanup() {
-    this->musicDataModel->clearData();
-    this->ui->progressBar->reset();
-    this->ui->fileLocLabel->clear();
     this->checkIfReadyForOp();
 }
 
@@ -202,6 +166,43 @@ void MainWindow::dispatchAutotag() {
         }
     }
 }
+
+void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al) {
+    ProposalSelectionDialog psd(tl, rl, al, this->ui->fileLocLabel->text());
+
+    if (psd.exec() == QDialog::Accepted) {
+        int row = this->ui->tableView->selectionModel()->selectedRows().at(0).row();
+
+        QString buffer = psd.getArtistSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 0), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getReleaseSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 1), QVariant(buffer), Qt::EditRole);
+
+        buffer = psd.getTitleSelection();
+        if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 2), QVariant(buffer), Qt::EditRole);
+    }
+}
+
+void MainWindow::showAboutQt() {
+    QMessageBox::aboutQt(this, tr("About Qt"));
+}
+
+void MainWindow::showFileLocation(const QModelIndex &mdi) {
+    if (this->ui->tableView->selectionModel()->selectedRows().size() == 1) {
+        this->ui->fileLocLabel->setText(this->musicDataModel->getFileLocation(mdi));
+    } else {
+        this->ui->fileLocLabel->clear();
+    }
+}
+
+void MainWindow::cleanup() {
+    this->musicDataModel->clearData();
+    this->ui->progressBar->reset();
+    this->ui->fileLocLabel->clear();
+    this->checkIfReadyForOp();
+}
+
 
 /* =========================================== */
 /*       Definition of private functions       */
