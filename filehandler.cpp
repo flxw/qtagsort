@@ -34,7 +34,7 @@ void FileHandler::startSortAction(void) {
     const float perc  = 100/this->dm->rowCount(QModelIndex());
 
     /* everything is initalized, now let the pattern expansion begin */
-    this->dm->prepareData();
+    //this->dm->prepareData();
 
     for (int i = 1; dbIt != this->dm->getDBend(); ++dbIt, ++i) {
         if (dbIt->isGood) {
@@ -47,6 +47,7 @@ void FileHandler::startSortAction(void) {
                 if (file.copy(dbIt->destination)) {
                     ++this->filesCopied;
                 } else {
+                    // TODO: check if file is existens and it should be replaced or not?!
                     ++this->copiesFailed;
                 }
             } else {

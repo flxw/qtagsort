@@ -2,6 +2,7 @@
 # include "ui_mainwindow.h"
 # include "versioninfo.h"
 # include "proposalselectiondialog.h"
+# include "sametargetchoicedialog.h"
 
 # include <QFileDialog>
 # include <QDropEvent>
@@ -50,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
     connect(this->ui->actionAbout_Qt, SIGNAL(triggered()), this, SLOT(showAboutQt()));
     connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
-    connect(this->ui->beginSortButton, SIGNAL(clicked()), this->fileHandler, SLOT(startSortAction()));
+    connect(this->ui->beginSortButton, SIGNAL(clicked()), this, SLOT(initSortAction()));
 
     /* operation aftermath information display */
     connect(this->fileHandler, SIGNAL(handleProgressPerc(int)), this->ui->progressBar, SLOT(setValue(int)));
@@ -182,6 +183,23 @@ void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QSt
         buffer = psd.getTitleSelection();
         if (!buffer.isEmpty()) this->musicDataModel->setData(musicDataModel->index(row, 2), QVariant(buffer), Qt::EditRole);
     }
+}
+
+void MainWindow::initSortAction() {
+    this->musicDataModel->prepareData();
+    QList<QStringList> duplicateList = this->musicDataModel->getDuplicates();
+
+    if (duplicateList.size()) {
+        SameTargetChoiceDialog stcDialog(duplicateList);
+
+        if (stcDialog.exec() == QDialog::Accepted) {
+            this->musicDataModel->deactivateDuplicates(stcDialog.getBadDuplicates());
+        } else {
+            return;
+        }
+    }
+
+    this->fileHandler->startSortAction();
 }
 
 void MainWindow::showAboutQt() {

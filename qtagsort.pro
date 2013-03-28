@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     resultdialog.cpp \
     musicdatamodel.cpp \
     fingerprinter.cpp \
-    proposalselectiondialog.cpp
+    proposalselectiondialog.cpp \
+    sametargetchoicedialog.cpp
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
@@ -30,12 +31,14 @@ HEADERS  += mainwindow.h \
     musicdatamodel.h \
     versioninfo.h \
     fingerprinter.h \
-    proposalselectiondialog.h
+    proposalselectiondialog.h \
+    sametargetchoicedialog.h
 
 FORMS    += mainwindow.ui \
     authordialog.ui \
     resultdialog.ui \
-    proposalselectiondialog.ui
+    proposalselectiondialog.ui \
+    sametargetchoicedialog.ui
 
 INCLUDEPATH += -I/usr/include/neon
 LIBS         += -ltag -lchromaprint -lavformat -lavcodec -lavutil
