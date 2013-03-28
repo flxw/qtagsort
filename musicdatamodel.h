@@ -33,6 +33,9 @@ public:
     QList<MusicDataModel::MusicFileData>::const_iterator getDBstart(void) const;
     QList<MusicDataModel::MusicFileData>::const_iterator getDBend(void) const;
 
+    QList<QStringList> getDuplicates(void);
+    void deactivateDuplicates(const QStringList &dL);
+
     QString getFileLocation(const QModelIndex &mdi) const;
 
     int addFile(const QString &file);
@@ -44,7 +47,7 @@ public:
     void clearData(void);
     void prepareData(void);
 
-    // reimplemented virtual functions
+    // reimplemented virtual functions ----------
     void sort(int column, Qt::SortOrder order);
 
     int rowCount(const QModelIndex &parent) const;

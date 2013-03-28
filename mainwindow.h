@@ -45,6 +45,7 @@ public slots:
     void deleteDBEntry(void);
     void dispatchAutotag(void);
     void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
+    void initSortAction(void);
 
     void showAboutQt(void);
     void showFileLocation(const QModelIndex &mdi);

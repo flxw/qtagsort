@@ -3,6 +3,7 @@
 # include <QFile>
 # include <QVariant>
 # include <QtAlgorithms>
+# include <QStringList>
 
 # include <taglib/fileref.h>
 
@@ -57,6 +58,60 @@ QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBstart(
 
 QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBend(void) const {
     return this->db.end();
+}
+
+QList<QStringList> MusicDataModel::getDuplicates() {
+    QList<QStringList> dList;
+    QList<QPair<QString,QString> > dbPairMirrorList;
+
+    /* initialize a pair list that mirrors the source/destinations
+     * inside our database */
+    for (QList<MusicFileData>::const_iterator it = this->db.begin();
+         it != this->db.end(); ++it) {
+        if (it->isGood) dbPairMirrorList.append(QPair<QString,QString>(it->location, it->destination));
+    }
+
+    /* now, traverse the pairlist to find the duplicates */
+    for (QList<QPair<QString,QString> >::const_iterator it = dbPairMirrorList.begin(), cit;
+         it != dbPairMirrorList.end(); ++it) {
+        QStringList locList;
+
+        /* move from the end of the list to the current index */
+        for (cit = dbPairMirrorList.end()-1; cit != dbPairMirrorList.begin()-1 && !dbPairMirrorList.empty(); --cit) {
+            if (it->second == cit->second) {
+                locList.append(cit->first);
+                dbPairMirrorList.removeOne(*cit);
+            }
+        }
+
+        /* if the locList contains any items,
+         * prepend the expanded pattern as needed by SameTargetChoiceDialog */
+        if (locList.size()) {
+            QString pattern = it->second;
+            locList.prepend(pattern.remove(this->targetDirectory + "/"));
+        }
+
+        dList.append(locList);
+    }
+
+    return dList;
+}
+
+void MusicDataModel::deactivateDuplicates(const QStringList &dL) {
+    /* iterate the items that shall not be marked */
+    for (QStringList::const_iterator it = dL.begin();
+         it != dL.end(); ++it) {
+
+        /* now find the file with this path inside the database... */
+        for (QList<MusicFileData>::iterator dbit= db.begin();
+             dbit != db.end(); ++dbit) {
+            if (dbit->location == *it) {
+                /* mark as 'bad' if found so that is does not get moved*/
+                dbit->isGood = false;
+                break;
+            }
+        }
+    }
 }
 
 QString MusicDataModel::getFileLocation(const QModelIndex &mdi) const {
@@ -114,6 +169,8 @@ void MusicDataModel::clearData(void) {
     this->db.clear();
     this->pattern = QString();
     this->targetDirectory = QString();
+
+    emit dataChanged(QModelIndex(), QModelIndex());
 }
 
 void MusicDataModel::prepareData(void) {
