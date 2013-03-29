@@ -32,9 +32,6 @@
    </item>
    <item row="4" column="2">
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
@@ -42,6 +39,9 @@
    </item>
    <item row="0" column="1" colspan="3">
     <widget class="QListView" name="sourceFileView">
+     <property name="toolTip">
+      <string>doubleclick the entry you want to select</string>
+     </property>
      <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
