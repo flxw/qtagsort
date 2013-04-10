@@ -1,6 +1,6 @@
 # include "musicdatamodel.h"
 
-# include <QFile>
+# include <QFileInfo>
 # include <QVariant>
 # include <QtAlgorithms>
 # include <QStringList>
@@ -77,10 +77,11 @@ QList<QStringList> MusicDataModel::getDuplicates() {
         QStringList locList;
 
         /* move from the end of the list to the current index */
-        for (cit = dbPairMirrorList.end()-1; cit != dbPairMirrorList.begin()-1 && !dbPairMirrorList.empty(); --cit) {
+        for (cit = it+1; cit != dbPairMirrorList.end(); ++cit) {
             if (it->second == cit->second) {
                 locList.append(cit->first);
                 dbPairMirrorList.removeOne(*cit);
+                cit = it+1;
             }
         }
 
@@ -89,9 +90,9 @@ QList<QStringList> MusicDataModel::getDuplicates() {
         if (locList.size()) {
             QString pattern = it->second;
             locList.prepend(pattern.remove(this->targetDirectory + "/"));
+            dList.append(locList);
         }
 
-        dList.append(locList);
     }
 
     return dList;
@@ -326,8 +327,8 @@ void MusicDataModel::expandPattern(MusicFileData &mfd) {
     if (this->renameFiles) {
         exp.replace(".ext", mfd.location.right(4));
     } else {
-        QFile mf(mfd.location);
-        exp.append(mf.fileName());
+        QFileInfo fi(mfd.location);
+        exp.append(fi.fileName());
     }
 
     /* check if part of the pattern could not be expanded */
