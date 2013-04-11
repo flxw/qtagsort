@@ -127,8 +127,11 @@ void MainWindow::setDestPath(void) {
 }
 
 void MainWindow::reactOnPatternChange(QString p) {
-    if ( this->patternValidator->isValid(p) ) {
+    if (this->patternValidator->isValid(p)) {
         this->musicDataModel->setPattern(p);
+
+        if (!p.endsWith("/")) p.append("/");
+
         this->ui->parsedPatternDispLabel->setText(this->expandExamplePattern());
     } else {
         this->musicDataModel->setPattern(QString());
@@ -156,6 +159,8 @@ void MainWindow::deleteDBEntry() {
     for (int i=sil.length()-1; i>=0; --i) {
         this->musicDataModel->removeRow(sil.at(i).row(), QModelIndex());
     }
+
+    this->ui->tableView->update(QModelIndex());
 }
 
 void MainWindow::dispatchAutotag() {
@@ -215,7 +220,7 @@ void MainWindow::showFileLocation(const QModelIndex &mdi) {
 }
 
 void MainWindow::cleanup() {
-    this->musicDataModel->clearData();
+    this->musicDataModel->reset();
     this->ui->progressBar->reset();
     this->ui->fileLocLabel->clear();
     this->checkIfReadyForOp();
