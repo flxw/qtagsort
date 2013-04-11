@@ -40,5 +40,4 @@ FORMS    += mainwindow.ui \
     proposalselectiondialog.ui \
     sametargetchoicedialog.ui
 
-#INCLUDEPATH += -I/usr/include/neon
-LIBS         += -ltag -lchromaprint -lavformat -lavcodec -lavutil
+LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample
