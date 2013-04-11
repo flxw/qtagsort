@@ -44,8 +44,7 @@ void Fingerprinter::getMusicBrainzData(const QString &filename) {
     QString request("http://api.acoustid.org/v2/lookup");
     int duration;
 
-    /* TODO: Get my own API key! */
-    request.append("?client=8XaBELgH");
+    request.append("?client=ObrsWKGE");
     request.append("&meta=recordings+releasegroups+compress");
     request.append("&fingerprint=").append(getFingerprint(filename, duration));
     request.append("&duration=").append(QString::number(duration));
