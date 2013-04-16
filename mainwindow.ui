@@ -147,7 +147,7 @@
        <item row="2" column="2">
         <widget class="QPushButton" name="autotagSelectedButton">
          <property name="text">
-          <string>Autotag selected items</string>
+          <string>Autotag selected item</string>
          </property>
         </widget>
        </item>
