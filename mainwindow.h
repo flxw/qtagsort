@@ -41,7 +41,7 @@ signals:
 public slots:
     void setDestPath(void);
     void reactOnPatternChange(QString p);
-    void addToDB(void);
+    void addToDBviaDialog(QAction *act);
     void deleteDBEntry(void);
     void dispatchAutotag(void);
     void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
