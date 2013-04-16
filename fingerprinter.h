@@ -10,6 +10,10 @@
 
 # include <chromaprint.h>
 
+# if defined(WIN32) && !defined(__unix__)
+#  include <stdint.h>
+# endif
+
 class Fingerprinter : public QObject {
 
     Q_OBJECT

@@ -20,10 +20,14 @@ extern "C" {
 # endif
 }
 
+# if defined(WIN32) && !defined(__unix__)
+#  define BUFFER_SIZE (192000 * 2)
+# elif defined(__unix__) && !defined(WIN32)
+#  define BUFFER_SIZE (AVCODEC_MAX_AUDIO_FRAME_SIZE * 2)
+#endif
+
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-
-#define BUFFER_SIZE (AVCODEC_MAX_AUDIO_FRAME_SIZE * 2)
 
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(52, 94, 1)
 #define AV_SAMPLE_FMT_S16 SAMPLE_FMT_S16
