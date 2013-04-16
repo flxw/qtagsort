@@ -10,9 +10,16 @@
 
 # include <chromaprint.h>
 
-# if defined(WIN32) && !defined(__unix__)
+# if defined(_WIN32) && !defined(__unix__)
 #  include <stdint.h>
 # endif
+
+/* TODO:
+ * introduce an overwrite policy!
+ * - highest bitrate
+ * - biggest filesize
+ * - longest duration...
+ */
 
 class Fingerprinter : public QObject {
 
@@ -26,7 +33,7 @@ public:
 
 private:
     static QString getFingerprint(const QString &filename, int &duration);
-    static int decode_audio_file(ChromaprintContext *chromaprint_ctx, int16_t *buffer1, int16_t *buffer2,
+    static int decode_audio_file(ChromaprintContext *chromaprint_ctx,
                                  const char *file_name, int max_length, int *duration);
 
     /* signals & slots =========================== */
@@ -39,7 +46,6 @@ private slots:
     void networkAccessChanged(QNetworkAccessManager::NetworkAccessibility na);
 
     /* attributes ================================ */
-public:
 private:
     QNetworkAccessManager *nwaManager;
     QScriptEngine scriptEngine;

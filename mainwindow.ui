@@ -92,6 +92,12 @@
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="2" column="1">
         <widget class="QPushButton" name="delEntryButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Remove File</string>
          </property>
@@ -137,17 +143,16 @@
          </attribute>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="addEntryButton">
-         <property name="text">
-          <string>Add...</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="2">
         <widget class="QPushButton" name="autotagSelectedButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
-          <string>Autotag selected items</string>
+          <string>Autotag selected item</string>
          </property>
         </widget>
        </item>
@@ -155,6 +160,22 @@
         <widget class="QLabel" name="fileLocLabel">
          <property name="text">
           <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QToolButton" name="addToolButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Add...</string>
+         </property>
+         <property name="popupMode">
+          <enum>QToolButton::InstantPopup</enum>
          </property>
         </widget>
        </item>
