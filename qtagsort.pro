@@ -15,7 +15,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     patternvalidator.cpp \
-    filehandler.cpp \
     authordialog.cpp \
     resultdialog.cpp \
     musicdatamodel.cpp \
@@ -25,7 +24,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
-    filehandler.h \
     authordialog.h \
     resultdialog.h \
     musicdatamodel.h \
@@ -41,3 +39,12 @@ FORMS    += mainwindow.ui \
     sametargetchoicedialog.ui
 
 LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample
+
+# TODO: refine windows build settings for include paths and library locations!
+win32 {
+    CONFIG(debug, debug|release) {
+        win32-g++: LIBS += ../taglib-debug/libTagLib.a
+    } else {
+        win32-g++: LIBS += ../taglib-release/libTagLib.a
+    }
+}
