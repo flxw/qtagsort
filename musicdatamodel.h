@@ -44,7 +44,7 @@ public:
 
     void setPattern(const QString &p);
     void setTargetDir(const QString &t);
-    void clearData(void);
+    void reset(void);
     void prepareData(void);
 
     // reimplemented virtual functions ----------

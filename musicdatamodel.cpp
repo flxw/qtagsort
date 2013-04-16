@@ -124,7 +124,7 @@ int MusicDataModel::addFile(const QString &file) {
     bool isDuplicate = false;
 
     /* iterate through the whole database and find out whether this
-     * file is already inside it */
+     * file is already inside */
     for (QList<MusicFileData>::const_iterator it = this->db.begin();
          it != this->db.end() && !isDuplicate;
          ++it) {
@@ -166,12 +166,12 @@ void MusicDataModel::setTargetDir(const QString &t) {
     this->targetDirectory = t;
 }
 
-void MusicDataModel::clearData(void) {
+void MusicDataModel::reset(void) {
+    emit beginResetModel();
     this->db.clear();
     this->pattern = QString();
     this->targetDirectory = QString();
-
-    emit dataChanged(QModelIndex(), QModelIndex());
+    emit endResetModel();
 }
 
 void MusicDataModel::prepareData(void) {
@@ -289,8 +289,10 @@ bool MusicDataModel::setHeaderData(int section, Qt::Orientation orientation, con
 }
 
 bool MusicDataModel::removeRow(int row, const QModelIndex &parent) {
+    emit beginRemoveRows(QModelIndex(), row, row);
     this->db.removeAt(row);
-    emit dataChanged(this->index(row,0), this->index(row+1,0));
+    emit endRemoveRows();
+
     return true;
 }
 

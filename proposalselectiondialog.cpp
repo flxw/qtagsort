@@ -9,20 +9,18 @@ ProposalSelectionDialog::ProposalSelectionDialog(QStringList tl, QStringList rl,
     QDialog(parent), ui(new Ui::ProposalSelectionDialog) {
     ui->setupUi(this);
 
-    this->ui->fileLabel->setText(tr("File: %1").arg(filename));
-
-    this->artistListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Artist")));
-    this->titleListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Title")));
-    this->releaseListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Album")));
-
     this->artistListModel  = new QStringListModel(al, this);
     this->titleListModel   = new QStringListModel(tl, this);
     this->releaseListModel = new QStringListModel(rl, this);
 
+    this->ui->fileLabel->setText(tr("File: %1").arg(filename));
+    this->artistListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Artist")));
+    this->titleListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Title")));
+    this->releaseListModel->setHeaderData(0, Qt::Horizontal, QVariant(tr("Album")));
+
     this->ui->titleView->setModel(titleListModel);
     this->ui->releaseView->setModel(releaseListModel);
     this->ui->artistView->setModel(artistListModel);
-
 }
 
 ProposalSelectionDialog::~ProposalSelectionDialog() {

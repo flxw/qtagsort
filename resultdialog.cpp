@@ -14,9 +14,9 @@ ResultDialog::~ResultDialog()
 }
 
 
-void ResultDialog::prepareShow(FileHandler::HandleReport res) {
-    this->ui->failureCountLabel->setText(QString::number(res.failed));
-    this->ui->succesCountLabel->setText(QString::number(res.handled));
+void ResultDialog::prepareShow(const int &good, const int &bad) {
+    this->ui->failureCountLabel->setText(QString::number(bad));
+    this->ui->succesCountLabel->setText(QString::number(good));
 
     this->show();
 }

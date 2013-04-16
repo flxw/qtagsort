@@ -3,8 +3,6 @@
 
 # include <QDialog>
 
-# include <filehandler.h>
-
 namespace Ui {
 class ResultDialog;
 }
@@ -18,7 +16,7 @@ public:
     ~ResultDialog();
 
 public slots:
-    void prepareShow(FileHandler::HandleReport res);
+    void prepareShow(const int& good, const int& bad);
     
 private:
     Ui::ResultDialog *ui;
