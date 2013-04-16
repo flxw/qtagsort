@@ -44,10 +44,12 @@ void Fingerprinter::getMusicBrainzData(const QString &filename) {
     QString request("http://api.acoustid.org/v2/lookup");
     int duration;
 
-    request.append("?client=ObrsWKGE");
+    request.append("?client=L382URCi");
     request.append("&meta=recordings+releasegroups+compress");
     request.append("&fingerprint=").append(getFingerprint(filename, duration));
     request.append("&duration=").append(QString::number(duration));
+
+    qDebug(qPrintable(request));
 
     this->nwaManager->get(QNetworkRequest(QUrl(request)));
 
