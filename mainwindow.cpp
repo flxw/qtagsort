@@ -17,7 +17,14 @@ MainWindow::MainWindow(QWidget *parent) :
     /* initialize the user interface object */
     ui->setupUi(this);
 
-    /* set some default values =============== */
+    QAction *act = new QAction(tr("File(s)"), this);
+    act->setData(QVariant(0));
+    this->ui->addToolButton->addAction(act);
+    act = new QAction(tr("Folder(s)"), this);
+    act->setData(QVariant(1));
+    this->ui->addToolButton->addAction(act);
+
+    /* allocate on heap and set some default values =============== */
     this->patternValidator = new PatternValidator(this);
     this->authorDialog     = new AuthorDialog(this);
     this->resultDialog     = new ResultDialog(this);
@@ -25,7 +32,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->fingerprinter    = new Fingerprinter(this);
 
     this->ui->patternEdit->setValidator(this->patternValidator);
-
     this->ui->tableView->setModel(this->musicDataModel);
 
 # if QT_VERSION < 0x050000
@@ -42,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->sTargetButton, SIGNAL(clicked()), this, SLOT(setDestPath()));
 
     /* UI -- functionality for tableview */
-    connect(this->ui->addEntryButton, SIGNAL(clicked()), this, SLOT(addToDB()));
+    connect(this->ui->addToolButton, SIGNAL(triggered(QAction*)), this, SLOT(addToDBviaDialog(QAction*)));
     connect(this->ui->delEntryButton, SIGNAL(clicked()), this, SLOT(deleteDBEntry()));
     connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
     connect(this->ui->autotagSelectedButton, SIGNAL(clicked()), this, SLOT(dispatchAutotag()));
@@ -56,8 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->actionAuthor, SIGNAL(triggered()), this->authorDialog, SLOT(show()));
     connect(this->ui->beginSortButton, SIGNAL(clicked()), this, SLOT(startSortAction()));
 
-    /* operation aftermath information display */
-
+    /* operation aftermath  */
     connect(this->resultDialog, SIGNAL(finished(int)), this, SLOT(cleanup()));
 }
 
@@ -143,11 +148,26 @@ void MainWindow::reactOnPatternChange(QString p) {
     this->checkIfReadyForOp();
 }
 
-void MainWindow::addToDB() {
+void MainWindow::addToDBviaDialog(QAction *act) {
     // select either files or folders with dialog and
     // add like added with DragEvent
-    QFileDialog fd(this, tr("Select the files that you want to sort by tags"));
-    fd.setFileMode(QFileDialog::ExistingFiles);
+    QFileDialog fd(this);
+
+    switch (act->data().toInt()) {
+    case 0:
+        fd.setWindowTitle(tr("Select the file(s) that you want to sort by tags"));
+        fd.setFileMode(QFileDialog::ExistingFiles);
+        break;
+
+    case 1:
+        fd.setWindowTitle(tr("Select the folder(s) of which you want to sort the contents"));
+        fd.setFileMode(QFileDialog::Directory);
+        fd.setOption(QFileDialog::ShowDirsOnly, true);
+        break;
+
+    default:
+        return;
+    }
 
     if (fd.exec() == QFileDialog::Accepted) {
         QStringList strl = fd.selectedFiles();
