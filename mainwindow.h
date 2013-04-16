@@ -5,7 +5,7 @@
 # include <QDropEvent>
 
 # include "patternvalidator.h"
-# include "filehandler.h"
+# include "fingerprinter.h"
 # include "authordialog.h"
 # include "resultdialog.h"
 # include "musicdatamodel.h"
@@ -45,7 +45,7 @@ public slots:
     void deleteDBEntry(void);
     void dispatchAutotag(void);
     void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
-    void initSortAction(void);
+    void startSortAction(void);
 
     void showAboutQt(void);
     void showFileLocation(const QModelIndex &mdi);
@@ -58,7 +58,7 @@ public:
 
 private:
     PatternValidator    *patternValidator;
-    FileHandler          *fileHandler;
+    Fingerprinter       *fingerprinter;
 
     Ui::MainWindow       *ui;
     AuthorDialog         *authorDialog;
