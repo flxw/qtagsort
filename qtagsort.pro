@@ -38,13 +38,20 @@ FORMS    += mainwindow.ui \
     proposalselectiondialog.ui \
     sametargetchoicedialog.ui
 
-LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample
+unix {
+    LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample
+}
 
-# TODO: refine windows build settings for include paths and library locations!
-win32 {
-    CONFIG(debug, debug|release) {
-        win32-g++: LIBS += ../taglib-debug/libTagLib.a
-    } else {
-        win32-g++: LIBS += ../taglib-release/libTagLib.a
-    }
+win32:win32-msvc2010 {
+    LIBS += -lc:/libs/tag
+    LIBS += -lc:/libs/chromaprint
+    LIBS += -lc:/libs/avformat-55
+    LIBS += -lc:/libs/avcodec-55
+    LIBS += -lc:/libs/avutil-52
+    LIBS += -lc:/libs/swresample-0
+
+    INCLUDEPATH += c:/libs/taglib/taglib/toolkit
+    INCLUDEPATH += c:/libs/taglib
+    INCLUDEPATH += c:/libs/chromaprint/src
+    INCLUDEPATH += c:/libs/ffmpeg/include
 }
