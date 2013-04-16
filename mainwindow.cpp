@@ -239,12 +239,7 @@ void MainWindow::startSortAction() {
     }
 
     this->ui->progressBar->setValue(100);
-
-    FileHandler::HandleReport hrep;
-    hrep.failed  = copiesFailed;
-    hrep.handled = filesCopied;
-
-    this->resultDialog->prepareShow(hrep);
+    this->resultDialog->prepareShow(filesCopied, copiesFailed);
 }
 
 void MainWindow::showAboutQt() {
