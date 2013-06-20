@@ -102,7 +102,7 @@ void MainWindow::dragMoveEvent(QDragMoveEvent *ev) {
 void MainWindow::dropEvent(QDropEvent *event) {
     const QMimeData *mD = event->mimeData();
 
-    /* check if we can get the location of the files dragged into the window */
+    /* check if we can get the location of the files that are dragged into the window */
     if (mD->hasUrls()) {
         QList<QUrl> urlList = mD->urls();
         QStringList strl;
