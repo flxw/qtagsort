@@ -1,0 +1,26 @@
+I will compile everything with MS Visual Studio 10 !
+====================================================
+
+>>> First step: Compile taglib to obtain tag.dll <<<
+----------------------------------------------------
+Preliminary: download and extract sources from https://github.com/taglib/taglib
+1. Open cmd.exe and cd to taglib source directory
+2. run cmake -G 'Visual Studio 10'
+3. open taglib.vls, select Release and BUILD
+
+>>> Second step: Compile chromaprint to obtain chromaprint.dll <<<
+------------------------------------------------------------------
+Preliminary: download and extract sources from https://bitbucket.org/acoustid/chromaprint
+1. download pre-built DLLs and -dev versions of ffmpeg here: http://ffmpeg.zeranoe.com/builds/
+2. generate .lib-Files on commandline and edit .def manually from the DLLs:
+    dumpbin /exports "dllname.dll" > "dllname.def"
+    now edit and remove dumpbin copyright output so it looks like
+    
+    EXPORTS
+    avformat_....
+
+    lib /def:dllname.def /out:dllname.lib /machine:x86
+
+3. now run cmake inside the chromaprint directory and set ffmpeg include directories
+   to the path of the dev version of ffmpeg. Set the library paths to point to
+   the newly generated .lib files (matching the demanded library name, of course).
