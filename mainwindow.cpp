@@ -13,7 +13,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
-    /* initialize the user interface object */
+
+    /* initialize the user interface */
     ui->setupUi(this);
 
     QAction *act = new QAction(tr("File(s)"), this);
@@ -22,6 +23,11 @@ MainWindow::MainWindow(QWidget *parent) :
     act = new QAction(tr("Folder(s)"), this);
     act->setData(QVariant(1));
     this->ui->addToolButton->addAction(act);
+
+    duplicateResolutionGroup = new QButtonGroup(this);
+    duplicateResolutionGroup->addButton(ui->dupResBitrateRadiobutton, 0);
+    duplicateResolutionGroup->addButton(ui->dupResDurationRadioButton, 1);
+    duplicateResolutionGroup->addButton(ui->dupResSamplerateRadioButton, 2);
 
     /* allocate on heap and set some default values =============== */
     this->patternValidator = new PatternValidator(this);
@@ -217,6 +223,7 @@ void MainWindow::startSortAction() {
 
     /* eliminate eventual duplicates */
     /* TODO: remove items based by looking at their properties */
+    this->musicDataModel->deactivateDuplicates((MusicDataModel::DupResolutionCriteria)this->duplicateResolutionGroup->checkedId());
 
     /* now do the copy work itself */
     QList<MusicDataModel::MusicFileData>::const_iterator dbIt = this->musicDataModel->getDBstart();

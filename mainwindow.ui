@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>521</width>
-    <height>545</height>
+    <height>579</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,47 +24,85 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0" colspan="3">
+    <item row="0" column="0">
      <widget class="QGroupBox" name="groupBox_2">
       <property name="title">
        <string>Step 1: set operation parameters</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0" colspan="3">
+       <item row="0" column="0">
         <widget class="QPushButton" name="sTargetButton">
          <property name="text">
           <string>Target folder</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="3">
-        <widget class="QLabel" name="label">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Example</string>
+          <string>Pattern</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Example pattern</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="4">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Resolve duplicates by</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QRadioButton" name="dupResBitrateRadiobutton">
+         <property name="text">
+          <string>Bitrate</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QRadioButton" name="dupResDurationRadioButton">
+         <property name="text">
+          <string>Duration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="3">
         <widget class="QLineEdit" name="patternEdit">
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Provide a structure for the directories that will be created during sorting:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%a&lt;/span&gt;  artist&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%r&lt;/span&gt;  album/release&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%t&lt;/span&gt;  title&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;%n&lt;/span&gt;  track number&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
+       <item row="0" column="1" colspan="3">
         <widget class="QLineEdit" name="targetDispLabel">
          <property name="readOnly">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
+       <item row="2" column="1" colspan="3">
         <widget class="QLabel" name="parsedPatternDispLabel">
          <property name="text">
           <string notr="true"/>
@@ -74,17 +112,17 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLabel" name="label_2">
+       <item row="4" column="3">
+        <widget class="QRadioButton" name="dupResSamplerateRadioButton">
          <property name="text">
-          <string>Pattern</string>
+          <string>Samplerate</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="2" column="0" colspan="3">
+    <item row="1" column="0">
      <widget class="QGroupBox" name="groupBox">
       <property name="title">
        <string>Step 2: refine tag data</string>
@@ -182,7 +220,7 @@
       </layout>
      </widget>
     </item>
-    <item row="3" column="0" colspan="3">
+    <item row="2" column="0">
      <widget class="QGroupBox" name="groupBox_3">
       <property name="title">
        <string>Step 3: begin sort operation</string>

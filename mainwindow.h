@@ -3,6 +3,7 @@
 
 # include <QMainWindow>
 # include <QDropEvent>
+# include <QButtonGroup>
 
 # include "patternvalidator.h"
 # include "fingerprinter.h"
@@ -57,13 +58,15 @@ public:
     const QRegExp        supportedFiletypes;
 
 private:
-    PatternValidator    *patternValidator;
-    Fingerprinter       *fingerprinter;
+    PatternValidator *patternValidator;
+    Fingerprinter    *fingerprinter;
 
-    Ui::MainWindow       *ui;
-    AuthorDialog         *authorDialog;
-    ResultDialog         *resultDialog;
-    MusicDataModel       *musicDataModel;
+    Ui::MainWindow   *ui;
+    AuthorDialog     *authorDialog;
+    ResultDialog     *resultDialog;
+    MusicDataModel   *musicDataModel;
+
+    QButtonGroup     *duplicateResolutionGroup;
 };
 
 #endif // MAINWINDOW_H

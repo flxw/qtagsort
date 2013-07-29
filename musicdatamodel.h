@@ -10,6 +10,7 @@ class MusicDataModel : public QAbstractTableModel
 
 public:
     const static QString PH_ARTIST, PH_ALBUM, PH_TITLE, PH_TRACKNO, PH_YEAR;
+    enum DupResolutionCriteria {BITRATE=0, DURATION, SAMPLERATE};
     struct MusicFileData {
         QString location;    /* where the files comes from on the system - ABSOLUTE */
         QString destination; /* where the file will go - ABSOLUTE */
@@ -22,6 +23,10 @@ public:
         unsigned int trackno;
         unsigned int year;
 
+        int samplerate;
+        int bitrate;
+        int duration;
+
         bool tagsEdited; /* have the tags been edited by the user ? */
         bool isGood;     /* shows us wether the file should be looked at and moved */
     };
@@ -33,8 +38,7 @@ public:
     QList<MusicDataModel::MusicFileData>::const_iterator getDBstart(void) const;
     QList<MusicDataModel::MusicFileData>::const_iterator getDBend(void) const;
 
-    QList<QStringList> getDuplicates(void);
-    void deactivateDuplicates(const QStringList &dL);
+    void deactivateDuplicates(const DupResolutionCriteria& criteria);
 
     QString getFileLocation(const QModelIndex &mdi) const;
 
@@ -47,7 +51,7 @@ public:
     void reset(void);
     void prepareData(void);
 
-    // reimplemented virtual functions ----------
+    /* reimplemented virtual functions ------- */
     void sort(int column, Qt::SortOrder order);
 
     int rowCount(const QModelIndex &parent) const;
