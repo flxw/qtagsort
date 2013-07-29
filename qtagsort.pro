@@ -19,8 +19,7 @@ SOURCES += main.cpp\
     resultdialog.cpp \
     musicdatamodel.cpp \
     fingerprinter.cpp \
-    proposalselectiondialog.cpp \
-    sametargetchoicedialog.cpp
+    proposalselectiondialog.cpp
 
 HEADERS  += mainwindow.h \
     patternvalidator.h \
@@ -29,14 +28,12 @@ HEADERS  += mainwindow.h \
     musicdatamodel.h \
     versioninfo.h \
     fingerprinter.h \
-    proposalselectiondialog.h \
-    sametargetchoicedialog.h
+    proposalselectiondialog.h
 
 FORMS    += mainwindow.ui \
     authordialog.ui \
     resultdialog.ui \
-    proposalselectiondialog.ui \
-    sametargetchoicedialog.ui
+    proposalselectiondialog.ui
 
 unix {
     LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample

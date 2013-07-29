@@ -2,7 +2,6 @@
 # include "ui_mainwindow.h"
 # include "versioninfo.h"
 # include "proposalselectiondialog.h"
-# include "sametargetchoicedialog.h"
 
 # include <QFileDialog>
 # include <QDropEvent>
@@ -217,17 +216,7 @@ void MainWindow::startSortAction() {
     this->musicDataModel->prepareData();
 
     /* eliminate eventual duplicates */
-    QList<QStringList> duplicateList = this->musicDataModel->getDuplicates();
-
-    if (duplicateList.size()) {
-        SameTargetChoiceDialog stcDialog(duplicateList);
-
-        if (stcDialog.exec() == QDialog::Accepted) {
-            this->musicDataModel->deactivateDuplicates(stcDialog.getBadDuplicates());
-        } else {
-            return;
-        }
-    }
+    /* TODO: remove items based by looking at their properties */
 
     /* now do the copy work itself */
     QList<MusicDataModel::MusicFileData>::const_iterator dbIt = this->musicDataModel->getDBstart();
