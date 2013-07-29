@@ -2,7 +2,6 @@
 # include "ui_mainwindow.h"
 # include "versioninfo.h"
 # include "proposalselectiondialog.h"
-# include "sametargetchoicedialog.h"
 
 # include <QFileDialog>
 # include <QDropEvent>
@@ -14,7 +13,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
-    /* initialize the user interface object */
+
+    /* initialize the user interface */
     ui->setupUi(this);
 
     QAction *act = new QAction(tr("File(s)"), this);
@@ -23,6 +23,11 @@ MainWindow::MainWindow(QWidget *parent) :
     act = new QAction(tr("Folder(s)"), this);
     act->setData(QVariant(1));
     this->ui->addToolButton->addAction(act);
+
+    duplicateResolutionGroup = new QButtonGroup(this);
+    duplicateResolutionGroup->addButton(ui->dupResBitrateRadiobutton, 0);
+    duplicateResolutionGroup->addButton(ui->dupResDurationRadioButton, 1);
+    duplicateResolutionGroup->addButton(ui->dupResSamplerateRadioButton, 2);
 
     /* allocate on heap and set some default values =============== */
     this->patternValidator = new PatternValidator(this);
@@ -217,17 +222,8 @@ void MainWindow::startSortAction() {
     this->musicDataModel->prepareData();
 
     /* eliminate eventual duplicates */
-    QList<QStringList> duplicateList = this->musicDataModel->getDuplicates();
-
-    if (duplicateList.size()) {
-        SameTargetChoiceDialog stcDialog(duplicateList);
-
-        if (stcDialog.exec() == QDialog::Accepted) {
-            this->musicDataModel->deactivateDuplicates(stcDialog.getBadDuplicates());
-        } else {
-            return;
-        }
-    }
+    /* TODO: remove items based by looking at their properties */
+    this->musicDataModel->deactivateDuplicates((MusicDataModel::DupResolutionCriteria)this->duplicateResolutionGroup->checkedId());
 
     /* now do the copy work itself */
     QList<MusicDataModel::MusicFileData>::const_iterator dbIt = this->musicDataModel->getDBstart();

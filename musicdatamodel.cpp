@@ -60,56 +60,57 @@ QList<MusicDataModel::MusicFileData>::const_iterator MusicDataModel::getDBend(vo
     return this->db.end();
 }
 
-QList<QStringList> MusicDataModel::getDuplicates() {
+void MusicDataModel::deactivateDuplicates(const DupResolutionCriteria &criteria) {
+    int i = 0;
     QList<QStringList> dList;
-    QList<QPair<QString,QString> > dbPairMirrorList;
+    QList< QPair<QString, QPair<int, int> > > dbPairMirrorList; /* index and crit comparison val in second pair */
+    QHash<QString, QPair<int,int> > bestForDestination; /* map destination to index and crit comparison value*/
 
-    /* initialize a pair list that mirrors the source/destinations
-     * inside our database */
-    for (QList<MusicFileData>::const_iterator it = this->db.begin();
-         it != this->db.end(); ++it) {
-        if (it->isGood) dbPairMirrorList.append(QPair<QString,QString>(it->location, it->destination));
+    /* initialize a pair list that mirrors the destinations/indices inside our database */
+    for (QList<MusicFileData>::const_iterator it = this->db.begin(); it != this->db.end(); ++it, ++i) {
+        if (it->isGood) {
+            switch(criteria) {
+            case BITRATE:
+                dbPairMirrorList.append(QPair<QString,QPair<int,int> >(it->destination, QPair<int,int>(i, it->bitrate)));
+                break;
+
+            case DURATION:
+                dbPairMirrorList.append(QPair<QString,QPair<int,int> >(it->destination, QPair<int,int>(i, it->duration)));
+                break;
+
+            case SAMPLERATE:
+                dbPairMirrorList.append(QPair<QString,QPair<int,int> >(it->destination, QPair<int,int>(i, it->samplerate)));
+                break;
+            }
+        }
     }
 
     /* now, traverse the pairlist to find the duplicates */
-    for (QList<QPair<QString,QString> >::const_iterator it = dbPairMirrorList.begin(), cit;
+    for (QList< QPair<QString,QPair<int,int> > >::const_iterator it = dbPairMirrorList.begin(), cit;
          it != dbPairMirrorList.end(); ++it) {
-        QStringList locList;
 
-        /* move from the end of the list to the current index */
-        for (cit = it+1; cit != dbPairMirrorList.end(); ++cit) {
-            if (it->second == cit->second) {
-                locList.append(cit->first);
-                dbPairMirrorList.removeOne(*cit);
-                cit = it+1;
-            }
-        }
+        /* traverse from current index until the end */
+        for (cit = it; cit != dbPairMirrorList.end(); ++cit) {
+            /* act on destination match */
+            QString f = it->first;
 
-        /* if the locList contains any items,
-         * prepend the expanded pattern as needed by SameTargetChoiceDialog */
-        if (locList.size()) {
-            QString pattern = it->second;
-            locList.prepend(pattern.remove(this->targetDirectory + "/"));
-            dList.append(locList);
-        }
-
-    }
-
-    return dList;
-}
-
-void MusicDataModel::deactivateDuplicates(const QStringList &dL) {
-    /* iterate the items that shall not be marked */
-    for (QStringList::const_iterator it = dL.begin();
-         it != dL.end(); ++it) {
-
-        /* now find the file with this path inside the database... */
-        for (QList<MusicFileData>::iterator dbit= db.begin();
-             dbit != db.end(); ++dbit) {
-            if (dbit->location == *it) {
-                /* mark as 'bad' if found so that is does not get moved*/
-                dbit->isGood = false;
-                break;
+            if (f == cit->first) {
+                if (bestForDestination.value(f, QPair<int,int>(-1,-1)).second < cit->second.second) {
+                    if (bestForDestination.contains(f)) {
+                        this->db[bestForDestination[f].first].isGood = false;
+                        bestForDestination[f].first  = cit->second.first;
+                        bestForDestination[f].second = cit->second.second;
+                        dbPairMirrorList.removeOne(*cit);
+                        cit = it;
+                    } else {
+                        bestForDestination[f].first  = cit->second.first;
+                        bestForDestination[f].second = cit->second.second;
+                    }
+                } else {
+                    this->db[cit->second.first].isGood = false;
+                    dbPairMirrorList.removeOne(*cit);
+                    cit = it;
+                }
             }
         }
     }
@@ -120,7 +121,7 @@ QString MusicDataModel::getFileLocation(const QModelIndex &mdi) const {
 }
 
 int MusicDataModel::addFile(const QString &file) {
-    TagLib::FileRef fr(file.toStdString().c_str(), false);
+    TagLib::FileRef fr(file.toStdString().c_str(), true);
     bool isDuplicate = false;
 
     /* iterate through the whole database and find out whether this
@@ -144,6 +145,9 @@ int MusicDataModel::addFile(const QString &file) {
     fileData.title      = QString(fr.tag()->title().toCString(true));
     fileData.trackno    = fr.tag()->track();
     fileData.year       = fr.tag()->year();
+    fileData.samplerate = fr.audioProperties()->sampleRate();
+    fileData.bitrate    = fr.audioProperties()->bitrate();
+    fileData.duration   = fr.audioProperties()->length();
     fileData.tagsEdited = false;
     fileData.isGood     = false;
 
