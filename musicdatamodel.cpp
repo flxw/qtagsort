@@ -173,8 +173,6 @@ void MusicDataModel::setTargetDir(const QString &t) {
 void MusicDataModel::reset(void) {
     emit beginResetModel();
     this->db.clear();
-    this->pattern = QString();
-    this->targetDirectory = QString();
     emit endResetModel();
 }
 

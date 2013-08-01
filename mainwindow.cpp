@@ -11,6 +11,8 @@
 # include <QMessageBox>
 # include <QTableView>
 
+# include <taglib/fileref.h>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),  supportedFiletypes(QRegExp(".(mp3|wma|acc|ogg)")), ui(new Ui::MainWindow) {
 
@@ -244,8 +246,30 @@ void MainWindow::startSortAction() {
                 if (file.copy(dbIt->destination)) {
                     ++filesCopied;
                 } else {
-                    // TODO: check if file is existens and it should be replaced or not?!
-                    ++copiesFailed;
+                    /* file copying has failed - meaning another file already exists
+                     * check wether we should overwrite that one */
+                    bool shouldOverwrite = false;
+                    TagLib::FileRef dup(dbIt->destination.toLocal8Bit().data());
+
+                    switch (duplicateResolutionGroup->checkedId()) {
+                    case 0: /* bitrate */
+                        shouldOverwrite = dup.audioProperties()->bitrate() < dbIt->bitrate;
+                        break;
+
+                    case 1: /* duration */
+                        shouldOverwrite = dup.audioProperties()->length() < dbIt->duration;
+                        break;
+
+                    case 2: /* samplerate */
+                        shouldOverwrite = dup.audioProperties()->sampleRate() < dbIt->samplerate;
+                        break;
+                    }
+
+                    if (shouldOverwrite) {
+                        shouldOverwrite = file.rename(dbIt->destination);
+                        filesCopied  += (int)shouldOverwrite;
+                        copiesFailed += (int)(!shouldOverwrite);
+                    }
                 }
             } else {
                 ++copiesFailed;
