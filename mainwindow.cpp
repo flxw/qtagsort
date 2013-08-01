@@ -249,7 +249,7 @@ void MainWindow::startSortAction() {
                     /* file copying has failed - meaning another file already exists
                      * check wether we should overwrite that one */
                     bool shouldOverwrite = false;
-                    TagLib::FileRef dup(dbIt->destination);
+                    TagLib::FileRef dup(dbIt->destination.toLocal8Bit().data());
 
                     switch (duplicateResolutionGroup->checkedId()) {
                     case 0: /* bitrate */
@@ -267,8 +267,8 @@ void MainWindow::startSortAction() {
 
                     if (shouldOverwrite) {
                         shouldOverwrite = file.rename(dbIt->destination);
-                        filesCopied += (int)shouldOverwrite;
-                        copiesFail  += (int)(!shouldOverwrite);
+                        filesCopied  += (int)shouldOverwrite;
+                        copiesFailed += (int)(!shouldOverwrite);
                     }
                 }
             } else {
