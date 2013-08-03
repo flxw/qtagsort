@@ -60,8 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showFileLocation(QModelIndex)));
     connect(this->ui->autotagSelectedButton, SIGNAL(clicked()), this, SLOT(dispatchAutotag()));
     connect(this->fingerprinter, SIGNAL(status(QString,int)), this->statusBar(), SLOT(showMessage(QString,int)));
-    connect(this->fingerprinter, SIGNAL(receivedGoodAnswer(QStringList,QStringList,QStringList)), \
-            this, SLOT(displayMatchSelectionDialog(QStringList, QStringList,QStringList)));
+    connect(this->fingerprinter, SIGNAL(receivedGoodAnswer(QString, QStringList,QStringList,QStringList)), \
+            this, SLOT(displayMatchSelectionDialog(QString, QStringList, QStringList,QStringList)));
 
     /* UI -- action connections */
     connect(this->ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
@@ -202,8 +202,8 @@ void MainWindow::dispatchAutotag() {
     }
 }
 
-void MainWindow::displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al) {
-    ProposalSelectionDialog psd(tl, rl, al, this->ui->fileLocLabel->text());
+void MainWindow::displayMatchSelectionDialog(QString fl, QStringList tl, QStringList rl, QStringList al) {
+    ProposalSelectionDialog psd(tl, rl, al, fl);
 
     if (psd.exec() == QDialog::Accepted) {
         int row = this->ui->tableView->selectionModel()->selectedRows().at(0).row();

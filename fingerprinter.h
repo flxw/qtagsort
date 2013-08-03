@@ -14,13 +14,6 @@
 #  include <stdint.h>
 # endif
 
-/* TODO:
- * introduce an overwrite policy!
- * - highest bitrate
- * - biggest filesize
- * - longest duration...
- */
-
 class Fingerprinter : public QObject {
 
     Q_OBJECT
@@ -38,7 +31,7 @@ private:
 
     /* signals & slots =========================== */
 signals:
-    void receivedGoodAnswer(QStringList, QStringList, QStringList);
+    void receivedGoodAnswer(QString, QStringList, QStringList, QStringList);
     void status(QString, int);
 
 private slots:
@@ -47,8 +40,10 @@ private slots:
 
     /* attributes ================================ */
 private:
+    QHash<QNetworkReply*,QString> replyFilelocationHash;
+
     QNetworkAccessManager *nwaManager;
-    QScriptEngine scriptEngine;
+    QScriptEngine          scriptEngine;
 };
 
 
