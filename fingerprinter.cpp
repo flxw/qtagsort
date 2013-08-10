@@ -55,7 +55,7 @@ void Fingerprinter::getMusicBrainzData(const QString &filename) {
 
     qDebug(qPrintable(request));
 
-    this->nwaManager->get(QNetworkRequest(QUrl(request)));
+    replyFilelocationHash.insert(this->nwaManager->get(QNetworkRequest(QUrl(request))), filename);
 
     emit status(tr("Built acoustID request....querying server..."), 5000);
 }
@@ -253,11 +253,15 @@ done:
 
 /* slots ===================================== */
 void Fingerprinter::receiveNetAnswer(QNetworkReply *reply) {
-    if (QNetworkReply::NoError == reply->error()) {
-        QString jsonString = QString(reply->readAll());
-        QScriptValue scValue = scriptEngine.evaluate("(" + jsonString + ")");
+    if (QNetworkReply::NoError != reply->error()) {
+        emit status(tr("Network error - QNetworkReply error code %1").arg(reply->error()), 5000);
+        return;
+    }
 
-        /* the result contains an OBJECT in the results list
+    QString jsonString = QString(reply->readAll());
+    QScriptValue scValue = scriptEngine.evaluate("(" + jsonString + ")");
+
+    /* the result contains an OBJECT in the results list
              * for each matched fingerprint!
              * as a consequence, we need to iterate over these objects
              * an call their properties as appropriate
@@ -288,47 +292,48 @@ void Fingerprinter::receiveNetAnswer(QNetworkReply *reply) {
                 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
               }]
              */
-        if (scValue.property("status").toString() == QString("ok")) {
-            QScriptValueIterator resultIterator(scValue.property("results"));
-            QStringList titleList, artistList, releaseList;
-            QString buffer;
+    if (scValue.property("status").toString() == QString("ok")) {
+        QScriptValueIterator resultIterator(scValue.property("results"));
+        QStringList titleList, artistList, releaseList;
+        QString fl;
+        QString buffer;
 
-            while (resultIterator.hasNext()) {
-                resultIterator.next();
+        fl = replyFilelocationHash.value(reply, QString());
+        replyFilelocationHash.remove(reply);
 
-                QScriptValueIterator recordingsIterator(resultIterator.value().property("recordings"));
+        while (resultIterator.hasNext()) {
+            resultIterator.next();
 
-                while (recordingsIterator.hasNext()) {
-                    recordingsIterator.next();
+            QScriptValueIterator recordingsIterator(resultIterator.value().property("recordings"));
 
-                    buffer = recordingsIterator.value().property("title").toString();
-                    if (!titleList.contains(buffer) && !buffer.isEmpty()) titleList.append(buffer);
+            while (recordingsIterator.hasNext()) {
+                recordingsIterator.next();
 
-                    QScriptValueIterator artistIterator(recordingsIterator.value().property("artists"));
-                    while (artistIterator.hasNext()) {
-                        artistIterator.next();
-                        buffer = artistIterator.value().property("name").toString();
-                        if (!artistList.contains(buffer) && !buffer.isEmpty()) artistList.append(buffer);
-                    }
+                buffer = recordingsIterator.value().property("title").toString();
+                if (!titleList.contains(buffer) && !buffer.isEmpty()) titleList.append(buffer);
 
-                    QScriptValueIterator releaseIterator(recordingsIterator.value().property("releasegroups"));
-                    while (releaseIterator.hasNext()) {
-                        releaseIterator.next();
-                        buffer = releaseIterator.value().property("title").toString();
-                        if (!releaseList.contains(buffer) && !buffer.isEmpty()) releaseList.append(buffer);
-                    }
+                QScriptValueIterator artistIterator(recordingsIterator.value().property("artists"));
+                while (artistIterator.hasNext()) {
+                    artistIterator.next();
+                    buffer = artistIterator.value().property("name").toString();
+                    if (!artistList.contains(buffer) && !buffer.isEmpty()) artistList.append(buffer);
+                }
+
+                QScriptValueIterator releaseIterator(recordingsIterator.value().property("releasegroups"));
+                while (releaseIterator.hasNext()) {
+                    releaseIterator.next();
+                    buffer = releaseIterator.value().property("title").toString();
+                    if (!releaseList.contains(buffer) && !buffer.isEmpty()) releaseList.append(buffer);
                 }
             }
+        }
 
-            if (titleList.length() || artistList.length() || releaseList.length()) {
-                emit status(tr("Received good answer...presenting matches...."), 5000);
-                emit receivedGoodAnswer(titleList, releaseList, artistList);
-            }
-        } else {
-            emit status(tr("Fingerprint could not be matched... :("), 5000);
+        if (titleList.length() || artistList.length() || releaseList.length()) {
+            emit status(tr("Received good answer...presenting matches...."), 5000);
+            emit receivedGoodAnswer(fl, titleList, releaseList, artistList);
         }
     } else {
-        emit status(tr("Network error - QNetworkReply error code %1").arg(reply->error()), 5000);
+        emit status(tr("Fingerprint could not be matched... :("), 5000);
     }
 
     reply->deleteLater();

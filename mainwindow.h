@@ -45,7 +45,7 @@ public slots:
     void addToDBviaDialog(QAction *act);
     void deleteDBEntry(void);
     void dispatchAutotag(void);
-    void displayMatchSelectionDialog(QStringList tl, QStringList rl, QStringList al);
+    void displayMatchSelectionDialog(QString fl, QStringList tl, QStringList rl, QStringList al);
     void startSortAction(void);
 
     void showAboutQt(void);
