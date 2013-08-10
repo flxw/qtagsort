@@ -1,5 +1,5 @@
 /* project start: 02.01.2013
- * last release:  08.08.2013 */
+ * last release:  10.08.2013 */
 
 #ifndef VESIONINFO_H
 #define VESIONINFO_H
