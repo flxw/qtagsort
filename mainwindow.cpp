@@ -342,12 +342,8 @@ void MainWindow::processFile(const QString &fpath, int &proc) {
         if (fi.isReadable()) {
             proc += this->musicDataModel->addFile(fpath);
             return;
-        } /*else {
-            this->ui->statusBar->showMessage(tr("File '%1' is unreadable!").arg(fpath), 5000);
         }
-    } else {
-        this->ui->statusBar->showMessage(tr("File '%1' is in the wrong file format!").arg(fpath), 5000);
-    */}
+    }
 }
 
 void MainWindow::checkIfReadyForOp(void) {
