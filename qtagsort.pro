@@ -39,7 +39,6 @@ unix {
     LIBS += -ltag -lchromaprint -lavformat -lavcodec -lavutil -lswresample
 }
 
-# TODO: refine windows build settings for include paths and library locations!
 win32 {
     LIBS += -lc:\libs\tag
     LIBS += -lc:\libs\chromaprint
